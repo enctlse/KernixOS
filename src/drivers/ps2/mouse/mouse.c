@@ -218,20 +218,18 @@ static void mouse_interrupt_handler(cpu_state_t* state __attribute__((unused))) 
         static int debug_count = 0;
         debug_count++;
         if (debug_count % 30 == 0) {
-            print("PS/2 Mouse: X=", GFX_GREEN);
+           
             char buf[16];
             str_copy(buf, "");
             str_append_uint(buf, (uint32_t)mouse_x);
-            print(buf, GFX_CYAN);
-            print(" Y=", GFX_GREEN);
+            
+           
             str_copy(buf, "");
             str_append_uint(buf, (uint32_t)mouse_y);
-            print(buf, GFX_CYAN);
-            print(" B=", GFX_GREEN);
+            
             str_copy(buf, "");
             str_append_uint(buf, mouse_buttons);
-            print(buf, GFX_CYAN);
-            print("\n", GFX_GREEN);
+           
         }
     if (mouse_callback) {
         mouse_callback(mouse_x, mouse_y, mouse_buttons);

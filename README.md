@@ -1,1 +1,6 @@
-# KernixOS Repository
+KernixOS
+==========
+
+The KernixOS - 64-bit operating system.
+kernel name - AC-0099
+version: 1.0.0
