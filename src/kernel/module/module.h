@@ -1,0 +1,23 @@
+#ifndef DRIVER_MODULE_H
+#define DRIVER_MODULE_H
+#include <types.h>
+#define MAX_MODULES 256
+#define VERSION_NUM(major, minor, patch, build) \
+    ((major << 24) | (minor << 16) | (patch << 8) | build)
+typedef struct driver_module {
+    const char *name;
+    const char *mount;
+    u32 version;
+    int (*init)(void);
+    void (*fini)(void);
+    void *(*open)(const char *path);
+    int (*read)(void *handle, void *buf, size_t count);
+    int (*write)(void *handle, const void *buf, size_t count);
+} driver_module;
+void module_init(void);
+int module_register(driver_module *module);
+void module_unregister(const char *name);
+driver_module* module_find(const char *name);
+int module_get_count(void);
+driver_module* module_get_by_index(int idx);
+#endif
