@@ -71,7 +71,7 @@ FHDR(cmd_help)
         print("  time           - show current time\n", GFX_WHITE);
         print("  calendar       - show date & time\n", GFX_WHITE);
         print("  uptime         - displays the uptime\n", GFX_WHITE);
-        print("  fetch          - DystopiaOS system info\n", GFX_WHITE);
+        print("  fetch          - KernixOS system info\n", GFX_WHITE);
         print("  cat <file>     - show file content\n", GFX_WHITE);
         print("  cd [path]      - Change the current directory\n", GFX_WHITE);
         print("  ls [path]      - list directory contents\n", GFX_WHITE);
