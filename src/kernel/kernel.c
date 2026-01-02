@@ -314,7 +314,7 @@ void _start(void)
     boot_log_print("");
     boot_log_print("");
     boot_log_print("");
-    boot_log_print("Kernel(AC-0099) version: 1.0.0 - release.");
+    boot_log_print("Kernel(AC-0099) version: 1.0.7 - release.");
     boot_log_print("KernixOS: Welcome.");
     boot_log_print("Type 'help' for available commands");
     console_init();
