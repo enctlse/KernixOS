@@ -643,7 +643,7 @@ if (max_term_height > fb_h) max_term_height = fb_h - 50;
     printbs(buf, GFX_GREEN);
     gui_window_t* terminal_window = gui_create_window("Terminal", 50, 50, max_term_width, max_term_height);
     if (terminal_window) {
-        str_copy(terminal_window->content, "DystopiaOS GUI Terminal\nType 'exit' to return to console\n");
+        
         if (gui_state.taskbar_button_count < MAX_WINDOWS) {
             gui_state.taskbar_buttons[gui_state.taskbar_button_count].window_id = terminal_window->id;
             str_copy(gui_state.taskbar_buttons[gui_state.taskbar_button_count].text, terminal_window->title);
@@ -663,8 +663,6 @@ if (max_term_height > fb_h) max_term_height = fb_h - 50;
     mouse_cursor_needs_redraw = 1;
     gui_create_button("Start", 10, fb_h - TASKBAR_HEIGHT + 5, 80, BUTTON_HEIGHT, on_start_button_click);
         gui_terminal_init();
-        gui_terminal_print("DystopiaOS GUI Terminal\n", GFX_BLACK);
-        gui_terminal_print("Type 'exit' to return to console\n\n", GFX_BLACK);
         gui_load_wallpaper("/boot/wallpaper.bmp");
         gui_initialized = 1;
     char debug_buf[64];
