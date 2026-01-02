@@ -1,6 +1,6 @@
 #include "psf.h"
 #include <string/string.h>
-#include <kernel/file_systems/vfs/vfs.h>
+#include <file_systems/vfs/vfs.h>
 #include <memory/main.h>
 #define MAX_FONT_SIZE (64 * 1024)
 static u8 font_buffer[MAX_FONT_SIZE];

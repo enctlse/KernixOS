@@ -42,6 +42,12 @@ void putpixel(u32 x, u32 y, u32 color)
     u32* buf = get_active_buffer();
     buf[y * stride + x] = color;
 }
+u32 getpixel(u32 x, u32 y) {
+    if (x >= fb_width || y >= fb_height) return 0;
+    u32 stride = get_stride();
+    u32* buf = get_active_buffer();
+    return buf[y * stride + x];
+}
 void clear(u32 color)
 {
     u32* buf = get_active_buffer();

@@ -26,3 +26,16 @@ volatile struct limine_module_request module_request = {
     .revision = 0,
     .response = NULL
 };
+__attribute__((used, section(".requests")))
+volatile struct limine_rsdp_request rsdp_request = {
+    .id = LIMINE_RSDP_REQUEST_ID,
+    .revision = 0,
+    .response = NULL
+};
+__attribute__((used, section(".requests")))
+volatile struct limine_mp_request mp_request = {
+    .id = LIMINE_MP_REQUEST_ID,
+    .revision = 0,
+    .response = NULL,
+    .flags = 0
+};

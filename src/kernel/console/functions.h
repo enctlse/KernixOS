@@ -26,3 +26,5 @@ FHDR(cmd_mouse);
 FHDR(cmd_mouse);
 FHDR(cmd_mousemove);
 FHDR(cmd_cls);
+FHDR(cmd_ping);
+FHDR(cmd_cpuinfo);

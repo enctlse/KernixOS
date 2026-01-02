@@ -1,13 +1,13 @@
 #include <kernel/console/console.h>
-#include <kernel/file_systems/vfs/vfs.h>
+#include <file_systems/vfs/vfs.h>
 #include <string/string.h>
 #include <drivers/ps2/mouse/mouse.h>
 #include <drivers/usb/usb_mouse.h>
 #include <drivers/ps2/keyboard/keyboard.h>
 extern char cwd[];
 #define MAX_PATH_LEN 256
-#include <kernel/gui/gui.h>
-#include <kernel/gui/programs/programs.h>
+#include <gui/gui.h>
+#include <gui/programs/programs.h>
 FHDR(cmd_cat) {
     const char *path = s;
     if (!path || *path == '\0') {
@@ -60,6 +60,7 @@ FHDR(cmd_ls) {
         print("this folder is empty \n", GFX_GRAY_50);
         return;
     }
+    int count = 0;
     while (child) {
         u32 color = GFX_WHITE;
         const char *type_str = "";
@@ -81,9 +82,16 @@ FHDR(cmd_ls) {
             str_append(buf, " bytes");
             print(buf, GFX_GRAY_50);
         }
-        print("\n", GFX_WHITE);
+        print("  ", GFX_WHITE);
+        count++;
+        if (count % 6 == 0) {
+            print("\n", GFX_WHITE);
+        }
         child = child->next;
     }
+    if (count % 6 != 0) {
+    print("\n", GFX_WHITE);
+}
 }
 FHDR(cmd_cd) {
     const char *path = s;

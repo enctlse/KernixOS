@@ -7,8 +7,11 @@
 #include <drivers/ps2/ps2.h>
 #include <drivers/ps2/keyboard/keyboard.h>
 #include <drivers/ps2/mouse/mouse.h>
-#include <kernel/gui/gui.h>
+#include <gui/gui.h>
 #include <kernel/cpu/cpu.h>
+#include <kernel/cpu/smp.h>
+#include <kernel/cpu/per_cpu.h>
+#include <kernel/proc/scheduler.h>
 #include <kernel/cpu/gdt.h>
 #include <kernel/cpu/idt.h>
 #include <memory/main.h>
@@ -18,10 +21,12 @@
 #include "exceptions/panic.h"
 #include <kernel/exceptions/timer.h>
 #include <kernel/exceptions/panic.h>
-#include <kernel/file_systems/vfs/vfs.h>
-#include <kernel/file_systems/vfs/init.h>
+#include <file_systems/vfs/vfs.h>
+#include <file_systems/vfs/init.h>
 #include <kernel/module/module.h>
 #include <kernel/pci/pci.h>
+#include <drivers/ethernet/e1000.h>
+#include <network/network.h>
 #include <drivers/cmos/cmos.h>
 static void boot_log_component(const char* component, int success, const char* details) {
     if (success) {
@@ -146,7 +151,7 @@ void _start(void)
     boot_log_component("Graphics Memory (GLIME)", 1, glime_info);
     boot_log_info("Initializing 2D graphics rendering...");
     graphics_init(fb, klime);
-    graphics_enable_double_buffering();
+    graphics_disable_double_buffering();
     boot_log_component("Graphics System", 1, "2D graphics rendering initialized with drawing primitives");
     boot_log_info("Setting up userspace memory management...");
     u64 phys_ulime = map_region_alloc(hhdm_request.response, ULIME_START, ULIME_META_SIZE);
@@ -181,6 +186,20 @@ void _start(void)
     boot_log_info("Configuring Interrupt Descriptor Table...");
     idt_init();
     boot_log_component("IDT", 1, "Interrupt Descriptor Table initialized with exception handlers");
+    boot_log_info("Initializing Symmetric Multi-Processing...");
+    smp_init();
+    char smp_detail[64];
+    smp_detail[0] = '\0';
+    str_copy(smp_detail, "Detected ");
+    str_append_uint(smp_detail, smp_get_cpu_count());
+    str_append(smp_detail, " CPUs via Limine SMP");
+    boot_log_component("SMP Initialization", 1, smp_detail);
+    boot_log_info("Initializing per-CPU data structures...");
+    per_cpu_init();
+    boot_log_component("Per-CPU Data", 1, "Per-CPU data structures initialized");
+    boot_log_info("Initializing task scheduler...");
+    scheduler_init();
+    boot_log_component("Task Scheduler", 1, "Task scheduler initialized with idle task");
     boot_log_info("Setting up system timer...");
     u32 freq = 1000;
     timer_init(freq);
@@ -192,6 +211,13 @@ void _start(void)
     str_append_uint(timer_info, 1000/freq);
     str_append(timer_info, "ms ticks)");
     boot_log_component("Timer", 1, timer_info);
+    boot_log_info("Starting application processors...");
+    char ap_detail[64];
+    ap_detail[0] = '\0';
+    str_copy(ap_detail, "Attempted to start ");
+    str_append_uint(ap_detail, smp_get_cpu_count() - 1);
+    str_append(ap_detail, " application processors");
+    boot_log_component("AP Startup", 1, ap_detail);
     boot_log_info("Starting system uptime tracking...");
     timer_set_boot_time();
     boot_log_component("Uptime Counter", 1, "System uptime tracking started with CMOS sync");
@@ -204,6 +230,12 @@ void _start(void)
     str_append_uint(pci_info, pci_count);
     str_append(pci_info, " devices enumerated");
     boot_log_component("PCI", 1, pci_info);
+    boot_log_info("Initializing Ethernet driver...");
+    e1000_init();
+    boot_log_component("Ethernet (e1000)", 1, "Intel 8254x Ethernet driver initialized");
+    boot_log_info("Initializing network stack...");
+    network_init();
+    boot_log_component("Network Stack", 1, "Basic network stack initialized");
     boot_log_info("Setting up dynamic module loading system...");
     module_init();
     boot_log_component("Module System", 1, "Dynamic module loading system ready");

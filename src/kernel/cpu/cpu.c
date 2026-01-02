@@ -135,7 +135,11 @@ cpu_info_t* cpu_get_info(void) {
     return &cpu_info;
 }
 int cpu_has_feature(u32 feature) {
-    if (feature & 0xFFFF0000) {
-        return (cpu_info.features_edx & feature) != 0;
-    } return (cpu_info.features_ecx & feature) != 0;
+    int result = (cpu_info.features_edx & feature) != 0;
+    BOOTUP_PRINT("[CPU] Feature 0x", GFX_GRAY_70);
+    BOOTUP_PRINT_INT(feature, GFX_CYAN);
+    BOOTUP_PRINT(" check: ", GFX_GRAY_70);
+    BOOTUP_PRINT(result ? "true" : "false", result ? GFX_GREEN : GFX_RED);
+    BOOTUP_PRINT("\n", GFX_GRAY_70);
+    return result;
 }

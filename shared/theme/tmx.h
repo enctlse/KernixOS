@@ -1,5 +1,5 @@
 #include "stdclrs.h"
-#include <kernel/file_systems/vfs/vfs.h>
+#include <file_systems/vfs/vfs.h>
 #include <kernel/communication/serial.h>
 #include <string/string.h>
 #define PCF_FONT_PATH "/boot/fonts/prefs.psf"

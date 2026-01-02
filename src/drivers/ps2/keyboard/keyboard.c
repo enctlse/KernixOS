@@ -1,6 +1,6 @@
 #include "keyboard.h"
 #include <kernel/console/console.h>
-#include <kernel/gui/gui.h>
+#include <gui/gui.h>
 #include <kernel/include/ports.h>
 #include <drivers/ps2/mouse/mouse.h>
 #include <drivers/usb/usb_mouse.h>
@@ -38,6 +38,7 @@ static const unsigned char scancode_to_ascii_shift[128] = {
 };
 static int shift_pressed = 0;
 static int caps_lock = 0;
+static int ctrl_pressed = 0;
 char keyboard_read_direct(void) {
     if ((inb(0x64) & 1) == 0) {
         return 0;
@@ -81,6 +82,9 @@ static void keyboard_interrupt_handler(cpu_state_t* state) {
         if (make_code == 0x2A || make_code == 0x36) {
             shift_pressed = 0;
         }
+        if (make_code == 0x1D) {
+            ctrl_pressed = 0;
+        }
         irq_ack(1);
         return;
     }
@@ -89,8 +93,18 @@ static void keyboard_interrupt_handler(cpu_state_t* state) {
         irq_ack(1);
         return;
     }
-    if (sc == 0x3A) {  
+    if (sc == 0x3A) {
         caps_lock = !caps_lock;
+        irq_ack(1);
+        return;
+    }
+    if (sc == 0x1D) {
+        ctrl_pressed = 1;
+        irq_ack(1);
+        return;
+    }
+    if (sc == 0x9D) {
+        ctrl_pressed = 0;
         irq_ack(1);
         return;
     }
@@ -101,9 +115,15 @@ if (shift_pressed) {
     key = scancode_to_ascii[sc];
 }
 if (caps_lock && !shift_pressed && key >= 'a' && key <= 'z') {
-    key -= 32;  
+    key -= 32;
 }
-    if (key) {
+    if (ctrl_pressed) {
+        if (key == 'c') {
+            console_handle_key(3);
+            irq_ack(1);
+            return;
+        }
+    } else if (key) {
         if (gui_running) {
             if (sc == 0x0E) {          
                 gui_handle_key('\b');
@@ -154,6 +174,7 @@ void keyboard_poll(void) {
                 unsigned char make = sc & 0x7F;
                 if (make == 0x2A || make == 0x36) shift_pressed = 0;
                 if (make == 0x3A) caps_lock = !caps_lock;
+                if (make == 0x1D) ctrl_pressed = 0;
                 continue;
             }
             if (sc == 0x2A || sc == 0x36) {
@@ -162,6 +183,14 @@ void keyboard_poll(void) {
             }
             if (sc == 0x3A) {
                 caps_lock = !caps_lock;
+                continue;
+            }
+            if (sc == 0x1D) {
+                ctrl_pressed = 1;
+                continue;
+            }
+            if (sc == 0x9D) {
+                ctrl_pressed = 0;
                 continue;
             }
             char key = 0;
@@ -177,7 +206,12 @@ void keyboard_poll(void) {
                     key = key - 'A' + 'a';
                 }
             }
-            if (key) {
+            if (ctrl_pressed) {
+                if (key == 'c') {
+                    console_handle_key(3);
+                    continue;
+                }
+            } else if (key) {
                 if (gui_running) {
                     if (sc == 0x0E) { 
                         gui_handle_key('\b');

@@ -2,7 +2,7 @@
 #include <kernel/include/ports.h>
 #include <kernel/exceptions/irq.h>
 #include <kernel/graph/graphics.h>
-#include <kernel/file_systems/vfs/vfs.h>
+#include <file_systems/vfs/vfs.h>
 #include <kernel/mem/klime/klime.h>
 #include <types.h>
 #define MOUSE_PORT_DATA    0x60
@@ -19,6 +19,8 @@ static uint8_t mouse_buttons = 0;
 static int mouse_initialized = 0;
 static int mouse_interrupt_count = 0;
 static int mouse_cursor_needs_redraw = 1; 
+static uint32_t cursor_bg[256];
+static int cursor_bg_valid = 0;
 static int mouse_sensitivity_div = 2;
 #define MOUSE_CURSOR_WIDTH  16
 #define MOUSE_CURSOR_HEIGHT 16
@@ -188,6 +190,8 @@ static uint8_t mouse_read() {
 }
 static void mouse_interrupt_handler(cpu_state_t* state __attribute__((unused))) {
     mouse_interrupt_count++;
+    prev_mouse_x = mouse_x;
+    prev_mouse_y = mouse_y;
     uint8_t status = inb(MOUSE_PORT_CMD);
     if (!(status & 0x20)) return;
     uint8_t b = inb(MOUSE_PORT_DATA);
@@ -218,18 +222,13 @@ static void mouse_interrupt_handler(cpu_state_t* state __attribute__((unused))) 
         static int debug_count = 0;
         debug_count++;
         if (debug_count % 30 == 0) {
-           
             char buf[16];
             str_copy(buf, "");
             str_append_uint(buf, (uint32_t)mouse_x);
-            
-           
             str_copy(buf, "");
             str_append_uint(buf, (uint32_t)mouse_y);
-            
             str_copy(buf, "");
             str_append_uint(buf, mouse_buttons);
-           
         }
     if (mouse_callback) {
         mouse_callback(mouse_x, mouse_y, mouse_buttons);
@@ -270,6 +269,7 @@ int mouse_init() {
     }
     prev_mouse_x = mouse_x;
     prev_mouse_y = mouse_y;
+    cursor_bg_valid = 0;
     mouse_initialized = 1;
     print("PS/2 mouse initialized successfully\n", GFX_GREEN);
     return 0;
@@ -297,7 +297,7 @@ int mouse_is_initialized() {
 void mouse_draw_cursor() {
     uint32_t fb_width = get_fb_width();
     uint32_t fb_height = get_fb_height();
-    const int CURSOR_WIDTH = 12;
+    const int CURSOR_WIDTH = 8;
     const int CURSOR_HEIGHT = 19;
     static const uint8_t cursor_bitmap[19] = {
         0b00000001,
@@ -320,6 +320,33 @@ void mouse_draw_cursor() {
         0b00000000,
         0b00000000,
     };
+    uint32_t cursor_width = mouse_cursor_image ? mouse_cursor_image->width : 8;
+    uint32_t cursor_height = mouse_cursor_image ? mouse_cursor_image->height : 19;
+    if (cursor_bg_valid && (prev_mouse_x != mouse_x || prev_mouse_y != mouse_y)) {
+        int px = prev_mouse_x;
+        int py = prev_mouse_y;
+        for (int y = 0; y < cursor_height; y++) {
+            for (int x = 0; x < cursor_width; x++) {
+                if (px + x >= 0 && px + x < fb_width && py + y >= 0 && py + y < fb_height) {
+                    putpixel(px + x, py + y, cursor_bg[y * cursor_width + x]);
+                }
+            }
+        }
+    }
+    int cx = mouse_x;
+    int cy = mouse_y;
+    for (int y = 0; y < cursor_height; y++) {
+        for (int x = 0; x < cursor_width; x++) {
+            if (cx + x >= 0 && cx + x < fb_width && cy + y >= 0 && cy + y < fb_height) {
+                cursor_bg[y * cursor_width + x] = getpixel(cx + x, cy + y);
+            } else {
+                cursor_bg[y * cursor_width + x] = 0;
+            }
+        }
+    }
+    cursor_bg_valid = 1;
+    prev_mouse_x = mouse_x;
+    prev_mouse_y = mouse_y;
     if (mouse_cursor_image) {
         int start_x = mouse_x;
         int start_y = mouse_y;

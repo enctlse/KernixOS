@@ -31,6 +31,8 @@
 void apic_init(void);
 u32 apic_get_id(void);
 void apic_send_ipi(u32 apic_id, u32 vector);
+void apic_send_init(u32 apic_id);
+void apic_send_sipi(u32 apic_id, u32 vector);
 void apic_eoi(void);
 u32 apic_read_reg(u32 reg);
 void apic_write_reg(u32 reg, u32 value);

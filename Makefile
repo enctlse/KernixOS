@@ -32,7 +32,7 @@ $(ISO): limine.conf $(BUILD_DIR)/kernel.elf
 
 	
 	@cp shared/ui/assets/cursor/cursor_small.bmp $(ISODIR)/boot/ui/assets/cursor/ 2>/dev/null || true
-	
+	@cp src/gui/wallpaper.bmp $(ISODIR)/boot/ui/assets/ 2>/dev/null || true
 
 	@xorriso -as mkisofs -b boot/limine/limine-bios-cd.bin \
 		-no-emul-boot -boot-load-size 4 -boot-info-table \
@@ -57,7 +57,8 @@ run: $(ISO)
 		-display sdl \
 		-serial stdio 2>&1 \
 		-no-reboot \
-		-no-shutdown
+		-no-shutdown \
+		-smp 4
 
 
 $(BUILD_DIR)/%.c.o: %.c

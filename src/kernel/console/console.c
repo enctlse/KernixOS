@@ -1,7 +1,7 @@
 #include "console.h"
 #include "functions.h"
 #include <string/string.h>
-#include <kernel/gui/gui.h>
+#include <gui/gui.h>
 static char input_buffer[MAX_INPUT_LEN];
 static int input_pos = 0;
 int boot_completed = 0;
@@ -11,7 +11,7 @@ static int history_count = 0;
 static int history_pos = -1;
 #define MAX_PATH_LEN 256
 char cwd[MAX_PATH_LEN] = "/";  
-static int cmd_count = 24;
+static int cmd_count = 26;
 void cmd_history(const char *args);
 static console_cmd_t commands[MAX_CMDS] = {
     CMDENTRY(cmd_echo, "echo", "Prints text to console", "echo [text]"),
@@ -20,6 +20,7 @@ static console_cmd_t commands[MAX_CMDS] = {
     CMDENTRY(cmd_fsize, "scale", "Change screen size", "scale [2-4]"),
     CMDENTRY(cmd_modules, "modules", "List loaded modules", "modules"),
     CMDENTRY(cmd_sysinfo, "fetch", "Display fetch", "fetch"),
+    CMDENTRY(cmd_cpuinfo, "cpuinfo", "Display CPU information", "cpuinfo"),
     CMDENTRY(cmd_cal, "calendar", "Displays current date & time", "calendar"),
     CMDENTRY(cmd_date, "date", "Displays current date", "date"),
     CMDENTRY(cmd_uptime, "uptime", "System uptime", "uptime"),
@@ -38,6 +39,7 @@ static console_cmd_t commands[MAX_CMDS] = {
     CMDENTRY(cmd_mousemove, "mousemove", "Move mouse cursor", "mousemove <x> <y>"),
     CMDENTRY(cmd_history, "history", "Show command history", "history"),
     CMDENTRY(cmd_cls, "cls", "Clear screen (works in GUI)", "cls"),
+    CMDENTRY(cmd_ping, "ping", "Ping a host", "ping <ip>"),
 };
 static void add_to_history(const char *command) {
     if (str_len(command) == 0) return;
@@ -101,13 +103,14 @@ void console_init(void)
     sconsole_theme(THEME_FLU);
     banner_init();
     console_window_init();
+    graphics_disable_double_buffering();
     cursor_();
     cursor_draw();
 }
 void console_run(void)
 {
 }
-void console_handle_key(int c)
+void console_handle_key(char c)
 {
     if (gui_running) {
         return;
@@ -138,11 +141,13 @@ void console_handle_key(int c)
         if (!gui_running && boot_completed) {
             shell_print_prompt();
         }
-        if (graphics_is_double_buffering_enabled()) {
+        if (!gui_running && graphics_is_double_buffering_enabled()) {
             graphics_swap_buffers();
         }
         console_window_check_scroll();
-        graphics_swap_buffers();
+        if (!gui_running) {
+            graphics_swap_buffers();
+        }
         return;
     }
     if (c == '\r') {
@@ -150,6 +155,13 @@ void console_handle_key(int c)
         input_buffer[input_pos++] = '\n';
         cursor_draw();
         return;
+    }
+    if (c == 3) {
+    input_pos = 0;
+    input_buffer[0] = '\0';
+    cursor_reset_blink();
+    shell_print_prompt();
+    return;
     }
     if (c == '\b') {
         if (input_pos > 0) {
@@ -240,7 +252,7 @@ void console_handle_key(int c)
     }
     cursor_reset_blink();
     cursor_draw();
-    if (graphics_is_double_buffering_enabled()) {
+    if (!gui_running && graphics_is_double_buffering_enabled()) {
         graphics_swap_buffers();
     }
 }
@@ -270,12 +282,16 @@ void console_execute(const char *input)
         cmd->func(args);
         banner_force_update();
         console_window_check_scroll();
-        graphics_swap_buffers();
+        if (!gui_running) {
+            graphics_swap_buffers();
+        }
     } else {
         print(cmd_name, GFX_RED);
         print(": command not found", GFX_RED);
         console_window_check_scroll();
-        graphics_swap_buffers();
+        if (!gui_running) {
+            graphics_swap_buffers();
+        }
     }
 }
 console_cmd_t* console_find_cmd(const char *name)

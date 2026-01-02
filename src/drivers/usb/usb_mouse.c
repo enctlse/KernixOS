@@ -43,6 +43,7 @@ static int usb_mouse_test_counter = 0;
 #define USB_MOUSE_CURSOR_HEIGHT 16
 static usb_mouse_callback_t usb_mouse_callback = NULL;
 static void usb_mouse_interrupt_handler(uint8_t* report, int report_size) {
+    printbs("USB interrupt\n", GFX_RED);
     usb_mouse_interrupt_count++;
     if (report_size < 4) return;
     usb_mouse_buttons = report[0] & 0x07;

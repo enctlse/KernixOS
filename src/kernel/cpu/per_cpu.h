@@ -13,7 +13,11 @@ typedef struct {
     u32 interrupt_nesting;
     void* current_process;
     void* current_thread;
+    task_t* current_task;
+    task_t* idle_task;
+    task_queue_t ready_queues[MAX_PRIORITY];
     spinlock_t lock;
+    u32 task_count;
 } per_cpu_data_t;
 void per_cpu_init(void);
 per_cpu_data_t* per_cpu_get(u32 cpu_id);

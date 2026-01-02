@@ -1,8 +1,6 @@
 #ifndef PRINT_H
 #define PRINT_H
-
 #include <types.h>
-
 void putchar(char c, u32 color);
 void print(const char *str, u32 color);
 void string(const char *str, u32 color);
@@ -22,5 +20,4 @@ void printbs(const char *str, u32 color);
 #define printHex(num, color)     print_hex(num, color)
 #define printHex64(num, color)   print_hex64(num, color)
 #define printString(str, color)  print(str, color)
-
 #endif

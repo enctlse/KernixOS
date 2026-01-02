@@ -70,3 +70,8 @@ void gdt_set_kernel_stack(u64 stack)
 {
     tss_set_stack(stack);
 }
+void gdt_load(void)
+{
+    gdt_flush((u64)&gdt_ptr);
+    tss_flush(TSS_SELECTOR);
+}

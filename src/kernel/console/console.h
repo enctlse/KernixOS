@@ -23,7 +23,7 @@ typedef struct {
 #define CMDENTRY(func, name, desc, usage) { func, name, desc, usage }
 void console_init(void);
 void console_run(void);
-void console_handle_key(int c);
+void console_handle_key(char c);
 void console_execute(const char *input);
 void shell_clear_screen(u32 color);
 void shell_print_prompt(void);

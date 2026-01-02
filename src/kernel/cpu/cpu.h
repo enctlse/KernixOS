@@ -38,6 +38,7 @@
 #define CPU_FEATURE_AVX     (1 << 28)
 #define CPU_FEATURE_F16C    (1 << 29)
 #define CPU_FEATURE_RDRAND  (1 << 30)
+#define CPU_FEATURE_X2APIC  (1 << 21)
 #define CPU_FEATURE_AVX2    (1 << 5)
 #define CPU_FEATURE_BMI1    (1 << 3)
 #define CPU_FEATURE_BMI2    (1 << 8)

@@ -3,10 +3,7 @@ void draw_rect(u32 x, u32 y, u32 width, u32 height, u32 color)
 {
     for (u32 dy = 0; dy < height; dy++)
     {
-        for (u32 dx = 0; dx < width; dx++)
-        {
-            putpixel(x + dx, y + dy, color);
-        }
+        putpixels_horizontal(x, y + dy, width, color);
     }
 }
 void draw_circle(u32 cx, u32 cy, u32 radius, u32 color)

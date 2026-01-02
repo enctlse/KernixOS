@@ -1,6 +1,6 @@
 #include "pcf.h"
 #include <string/string.h>  
-#include <kernel/file_systems/vfs/vfs.h>
+#include <file_systems/vfs/vfs.h>
 #define MAX_FONT_SIZE (16 * 1024)
 static u8 font_buffer[MAX_FONT_SIZE];
 static u32 read_u32(const u8* data, u32 offset) {
