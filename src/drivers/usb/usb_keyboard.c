@@ -74,6 +74,11 @@ void usb_keyboard_handle_report(const usb_kb_report_t *report) {
                 }
             }
             usb_kb_callback(ascii);
+        } else {
+            if (key == 0x52) usb_kb_callback(0x80); // up
+            else if (key == 0x51) usb_kb_callback(0x81); // down
+            else if (key == 0x50) usb_kb_callback(0x82); // left
+            else if (key == 0x4F) usb_kb_callback(0x83); // right
         }
     }
     for (int i = 0; i < 6; i++) {

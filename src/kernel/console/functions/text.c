@@ -79,6 +79,7 @@ FHDR(cmd_help)
         print("  touch          - Create the file\n", GFX_WHITE);
         print("  reboot         - reboot the system\n", GFX_WHITE);
         print("  meminfo        - heap memory information\n", GFX_WHITE);
+        print("  cpuinfo        - heap cpu information\n", GFX_WHITE);
         print("  modules        - shows all modules in fs\n", GFX_WHITE);
         print("  history        - show command history\n", GFX_WHITE);
         print("Type 'help <command>' for details", GFX_CYAN);

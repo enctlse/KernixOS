@@ -4,6 +4,7 @@
 #include <gui/gui.h>
 static char input_buffer[MAX_INPUT_LEN];
 static int input_pos = 0;
+static int input_start_x = 0;
 int boot_completed = 0;
 #define MAX_HISTORY 50
 static char command_history[MAX_HISTORY][MAX_INPUT_LEN];
@@ -107,7 +108,21 @@ void console_init(void)
 void console_run(void)
 {
 }
-void console_handle_key(char c)
+void console_set_input_start_x(void) {
+    input_start_x = cursor_x;
+}
+static void redraw_input_line() {
+    cursor_x = input_start_x;
+    u32 char_height = fm_get_char_height() * font_scale;
+    draw_rect(cursor_x, cursor_y, fb_width - cursor_x, char_height, CONSOLESCREEN_BG_COLOR);
+    string(input_buffer, GFX_WHITE);
+    cursor_x = input_start_x + input_pos * fm_get_char_width() * font_scale;
+    cursor_draw();
+    if (!gui_running && graphics_is_double_buffering_enabled()) {
+        graphics_swap_buffers();
+    }
+}
+void console_handle_key(int c)
 {
     if (gui_running) {
         return;
@@ -138,6 +153,7 @@ void console_handle_key(char c)
         if (!gui_running && boot_completed) {
             shell_print_prompt();
         }
+        input_start_x = cursor_x;
         if (!gui_running && graphics_is_double_buffering_enabled()) {
             graphics_swap_buffers();
         }
@@ -163,31 +179,26 @@ void console_handle_key(char c)
     if (c == '\b') {
         if (input_pos > 0) {
             input_pos--;
-            input_buffer[input_pos] = '\0';
-            u32 char_width = fm_get_char_width() * font_scale;
-            u32 char_height = fm_get_char_height() * font_scale;
-            if (cursor_x >= char_width) {
-                cursor_x -= char_width;
-                putchar(' ', GFX_WHITE);
-                cursor_x -= char_width;
-                draw_rect(cursor_x, cursor_y, char_width, char_height, CONSOLESCREEN_BG_COLOR);
+            for (int i = input_pos; i <= str_len(input_buffer); i++) {
+                input_buffer[i] = input_buffer[i+1];
             }
+            redraw_input_line();
         }
         cursor_reset_blink();
-        cursor_draw();
-        graphics_swap_buffers();
         return;
     }
     if (c == '\t') {
         for (int i = 0; i < 4; i++) {
-            if (input_pos < MAX_INPUT_LEN - 1) {
-                input_buffer[input_pos++] = ' ';
-                input_buffer[input_pos] = '\0';
+            if (str_len(input_buffer) < MAX_INPUT_LEN - 1) {
+                for (int j = str_len(input_buffer); j >= input_pos; j--) {
+                    input_buffer[j+1] = input_buffer[j];
+                }
+                input_buffer[input_pos] = ' ';
+                input_pos++;
             }
-            putchar(' ', GFX_WHITE);
         }
+        redraw_input_line();
         cursor_reset_blink();
-        cursor_draw();
         return;
     }
     if (c == 0x80) {
@@ -198,14 +209,9 @@ void console_handle_key(char c)
             history_pos++;
             const char *cmd = get_history_command(history_pos);
             if (cmd) {
-                while (input_pos > 0) {
-                    input_pos--;
-                    cursor_x -= fm_get_char_width() * font_scale;
-                }
-                draw_rect(cursor_x, cursor_y, fb_width - cursor_x, fm_get_char_height() * font_scale, CONSOLESCREEN_BG_COLOR);
                 str_copy(input_buffer, cmd);
                 input_pos = str_len(cmd);
-                string(cmd, GFX_WHITE);
+                redraw_input_line();
             }
         }
         cursor_draw();
@@ -216,41 +222,58 @@ void console_handle_key(char c)
             history_pos--;
             const char *cmd = get_history_command(history_pos);
             if (cmd) {
-                while (input_pos > 0) {
-                    input_pos--;
-                    cursor_x -= fm_get_char_width() * font_scale;
-                }
-                draw_rect(cursor_x, cursor_y, fb_width - cursor_x, fm_get_char_height() * font_scale, CONSOLESCREEN_BG_COLOR);
                 str_copy(input_buffer, cmd);
                 input_pos = str_len(cmd);
-                string(cmd, GFX_WHITE);
+                redraw_input_line();
             }
         } else if (history_pos == 0) {
             history_pos = -1;
-            while (input_pos > 0) {
-                input_pos--;
-                cursor_x -= fm_get_char_width() * font_scale;
-            }
-            draw_rect(cursor_x, cursor_y, fb_width - cursor_x, fm_get_char_height() * font_scale, CONSOLESCREEN_BG_COLOR);
+            input_buffer[0] = '\0';
+            input_pos = 0;
+            redraw_input_line();
         }
         cursor_draw();
+        return;
+    }
+    if (c == 0x82) {
+        if (input_pos > 0) {
+            input_pos--;
+            cursor_x -= fm_get_char_width() * font_scale;
+            cursor_draw();
+            if (!gui_running && graphics_is_double_buffering_enabled()) {
+                graphics_swap_buffers();
+            }
+        }
+        return;
+    }
+    if (c == 0x83) {
+        if (input_pos < str_len(input_buffer)) {
+            input_pos++;
+            cursor_x += fm_get_char_width() * font_scale;
+            cursor_draw();
+            if (!gui_running && graphics_is_double_buffering_enabled()) {
+                graphics_swap_buffers();
+            }
+        }
         return;
     }
     if (history_pos != -1 && ((c >= 32 && c <= 126) || c == ' ')) {
         reset_history_pos();
     }
     console_window_check_scroll();
-    if (input_pos < MAX_INPUT_LEN - 1) {
-        input_buffer[input_pos++] = c;
-        input_buffer[input_pos] = '\0';
-        putchar(c, GFX_WHITE);
-    } else {
-        putchar(c, GFX_WHITE);
-    }
-    cursor_reset_blink();
-    cursor_draw();
-    if (!gui_running && graphics_is_double_buffering_enabled()) {
-        graphics_swap_buffers();
+    if (c >= 32 && c <= 126) {
+        if (str_len(input_buffer) < MAX_INPUT_LEN - 1) {
+            for (int i = str_len(input_buffer); i >= input_pos; i--) {
+                input_buffer[i+1] = input_buffer[i];
+            }
+            input_buffer[input_pos] = c;
+            input_pos++;
+            redraw_input_line();
+        } else {
+            putchar(c, GFX_WHITE);
+        }
+        cursor_reset_blink();
+        return;
     }
 }
 void console_execute(const char *input)

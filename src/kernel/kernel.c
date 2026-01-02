@@ -321,6 +321,7 @@ void _start(void)
     setcontext(THEME_CONSOLE);
     putchar('\n', GFX_GRAY_70);
     shell_print_prompt();
+    console_set_input_start_x();
     cursor_enable();
     extern int boot_completed;
     boot_completed = 1;

@@ -124,8 +124,8 @@ void gui_terminal_handle_key(char key) {
             extern void cursor_draw(void);
             extern void mouse_set_callback(void (*cb)(int32_t, int32_t, uint8_t));
             extern void usb_mouse_set_callback(void (*cb)(int32_t, int32_t, uint8_t));
-            extern void usb_keyboard_set_callback(void (*cb)(char));
-            extern void console_handle_key(char);
+            extern void usb_keyboard_set_callback(void (*cb)(int));
+            extern void console_handle_key(int);
             graphics_disable_double_buffering();
             console_window_init();
             cursor_draw();

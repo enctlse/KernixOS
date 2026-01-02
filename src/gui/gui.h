@@ -103,7 +103,7 @@ extern int gui_running;
 void gui_init();
 void gui_run();
 void gui_timer_callback(void);
-void gui_handle_key(char key);
+void gui_handle_key(int key);
 void gui_mouse_event_handler(int32_t x, int32_t y, uint8_t buttons);
 gui_window_t* gui_create_window(const char* title, int x, int y, int width, int height);
 void gui_destroy_window(gui_window_t* window);

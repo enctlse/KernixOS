@@ -673,7 +673,7 @@ if (max_term_height > fb_h) max_term_height = fb_h - 50;
     mouse_set_callback(gui_mouse_event_handler);
     usb_mouse_set_callback(gui_mouse_event_handler);
     extern int usb_keyboard_init(void);
-    extern void usb_keyboard_set_callback(void (*cb)(char));
+    extern void usb_keyboard_set_callback(void (*cb)(int));
     usb_keyboard_init();
     usb_keyboard_set_callback(gui_handle_key);
     str_copy(debug_buf, "GUI: Before mouse position\n");
@@ -760,7 +760,7 @@ static void on_start_button_click(gui_button_t* button) {
         str_copy(start_window->content, "Start Menu\n\nTerminal\nCalculator\nText Editor\n\nShutdown");
     }
 }
-void gui_handle_key(char key) {
+void gui_handle_key(int key) {
     for (int i = 0; i < gui_state.window_count; i++) {
         if (str_equals(gui_state.windows[i].title, "Terminal")) {
             gui_focus_window(&gui_state.windows[i]);
