@@ -129,7 +129,7 @@ void console_handle_key(int c)
     }
     cursor_c();
     if (c == '\n') {
-        putchar('\n', GFX_WHITE);
+        
         if (input_pos > 0) {
             input_buffer[input_pos] = '\0';
             add_to_history(input_buffer);
@@ -298,16 +298,20 @@ void console_execute(const char *input)
     } else {
     }
     if (cmd) {
-        print("\n", GFX_CYAN);
+        putchar('\n', GFX_WHITE);
+        putchar('\n', GFX_WHITE);
         cmd->func(args);
+        
         banner_force_update();
         console_window_check_scroll();
         if (!gui_running) {
             graphics_swap_buffers();
         }
     } else {
+        putchar('\n', GFX_WHITE);
         print(cmd_name, GFX_RED);
         print(": command not found", GFX_RED);
+        putchar('\n', GFX_WHITE);
         console_window_check_scroll();
         if (!gui_running) {
             graphics_swap_buffers();
