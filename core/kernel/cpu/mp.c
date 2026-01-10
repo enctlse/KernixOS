@@ -1,0 +1,118 @@
+#include "mp.h"
+#include <kernel/include/reqs.h>
+#include <string/string.h>
+#include <memory/main.h>
+#include <theme/stdclrs.h>
+#include <kernel/graph/theme.h>
+#include <theme/tmx.h>
+static mp_floating_pointer_t* mp_fp = NULL;
+mp_config_table_t* mp_config = NULL;
+static u8 mp_checksum(void* ptr, u32 length) {
+    u8 sum = 0;
+    u8* data = (u8*)ptr;
+    for (u32 i = 0; i < length; i++) {
+        sum += data[i];
+    }
+    return sum;
+}
+static mp_floating_pointer_t* mp_find_floating_pointer(void) {
+    BOOTUP_PRINT("[MP] Searching EBDA for MP floating pointer\n", GFX_GRAY_70);
+    u16* ebda_segment = (u16*)0x40E;
+    u32 ebda_addr = (*ebda_segment) << 4;
+    u32 ebda_end = ebda_addr + 1024;
+    BOOTUP_PRINT("[MP] EBDA addr: 0x", GFX_GRAY_70);
+    BOOTUP_PRINT_INT(ebda_addr, GFX_CYAN);
+    BOOTUP_PRINT(" to 0x", GFX_GRAY_70);
+    BOOTUP_PRINT_INT(ebda_end, GFX_CYAN);
+    BOOTUP_PRINT("\n", GFX_GRAY_70);
+    for (u32 addr = ebda_addr; addr < ebda_end; addr += 16) {
+        BOOTUP_PRINT("[MP] Checking EBDA addr 0x", GFX_GRAY_70);
+        BOOTUP_PRINT_INT(addr, GFX_CYAN);
+        BOOTUP_PRINT("\n", GFX_GRAY_70);
+        if (memcmp((void*)addr, "_MP_", 4) == 0) {
+            mp_floating_pointer_t* fp = (mp_floating_pointer_t*)addr;
+            if (mp_checksum(fp, fp->length * 16) == 0) {
+                BOOTUP_PRINT("[MP] Found valid MP FP in EBDA\n", GFX_GRAY_70);
+                return fp;
+            }
+        }
+    }
+    BOOTUP_PRINT("[MP] Searching base memory for MP floating pointer\n", GFX_GRAY_70);
+    for (u32 addr = 0xF0000; addr < 0x100000; addr += 16) {
+        BOOTUP_PRINT("[MP] Checking base addr 0x", GFX_GRAY_70);
+        BOOTUP_PRINT_INT(addr, GFX_CYAN);
+        BOOTUP_PRINT("\n", GFX_GRAY_70);
+        if (memcmp((void*)addr, "_MP_", 4) == 0) {
+            mp_floating_pointer_t* fp = (mp_floating_pointer_t*)addr;
+            if (mp_checksum(fp, fp->length * 16) == 0) {
+                BOOTUP_PRINT("[MP] Found valid MP FP in base memory\n", GFX_GRAY_70);
+                return fp;
+            }
+        }
+    }
+    BOOTUP_PRINT("[MP] MP floating pointer not found\n", GFX_RED);
+    return NULL;
+}
+int mp_init(void) {
+    mp_fp = mp_find_floating_pointer();
+    if (!mp_fp) {
+        BOOTUP_PRINT("[MP] MP floating pointer not found\n", GFX_RED);
+        return -1;
+    }
+    if (mp_fp->configuration_table == 0) {
+        BOOTUP_PRINT("[MP] Default configuration not supported\n", GFX_RED);
+        return -1;
+    }
+    BOOTUP_PRINT("[MP] MP config table at 0x", GFX_GRAY_70);
+    BOOTUP_PRINT_INT(mp_fp->configuration_table >> 32, GFX_CYAN);
+    BOOTUP_PRINT_INT(mp_fp->configuration_table & 0xFFFFFFFF, GFX_CYAN);
+    BOOTUP_PRINT(", mapping to virtual\n", GFX_GRAY_70);
+    int config_valid = 0;
+    if (memmap_request.response) {
+        for (u64 i = 0; i < memmap_request.response->entry_count; i++) {
+            struct limine_memmap_entry *entry = memmap_request.response->entries[i];
+            if (entry->type == LIMINE_MEMMAP_USABLE &&
+                mp_fp->configuration_table >= entry->base &&
+                mp_fp->configuration_table < entry->base + entry->length) {
+                config_valid = 1;
+                break;
+            }
+        }
+    }
+    if (!config_valid) {
+        BOOTUP_PRINT("[MP] MP config address not in usable memory\n", GFX_RED);
+        return -1;
+    }
+    mp_config = (mp_config_table_t*)(mp_fp->configuration_table + hhdm_request.response->offset);
+    BOOTUP_PRINT("[MP] MP config mapped\n", GFX_GRAY_70);
+    if (memcmp(mp_config->signature, "PCMP", 4) != 0) {
+        BOOTUP_PRINT("[MP] Invalid MP configuration table signature\n", GFX_RED);
+        return -1;
+    }
+    if (mp_checksum(mp_config, mp_config->length) != 0) {
+        BOOTUP_PRINT("[MP] MP configuration table checksum failed\n", GFX_RED);
+        return -1;
+    }
+    BOOTUP_PRINT("[MP] MP table found\n", GFX_GRAY_70);
+    return 0;
+}
+void mp_parse_cpus(void) {
+    if (!mp_config) return;
+    BOOTUP_PRINT("[MP] Parsing MP table for CPUs\n", GFX_GRAY_70);
+    u8* entry_ptr = (u8*)mp_config + sizeof(mp_config_table_t);
+    u8* table_end = (u8*)mp_config + mp_config->length;
+    while (entry_ptr < table_end) {
+        u8 entry_type = *entry_ptr;
+        if (entry_type == MP_ENTRY_PROCESSOR) {
+            mp_processor_entry_t* proc = (mp_processor_entry_t*)entry_ptr;
+            if (proc->cpu_flags & 1) {
+                BOOTUP_PRINT("  CPU APIC ID ", GFX_GRAY_70);
+                BOOTUP_PRINT_INT(proc->local_apic_id, GFX_CYAN);
+                BOOTUP_PRINT("\n", GFX_GRAY_70);
+            }
+            entry_ptr += sizeof(mp_processor_entry_t);
+        } else {
+            entry_ptr += 8;
+        }
+    }
+}

@@ -1,0 +1,13 @@
+In order to build a project, you need to use the Makefile.
+
+---------------------------
+
+Commands:
+
+make - Build a project
+
+make run - Launch a project
+
+---------------------------
+
+KernixOS - 2026.
