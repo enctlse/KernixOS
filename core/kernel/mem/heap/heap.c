@@ -1,6 +1,6 @@
 #include "heap.h"
 #include "../phys/physmem.h"
-#include <limine/limine.h>
+#include <limine.h>
 #include <kernel/exceptions/panic.h>
 #include <memory/main.h>
 #include <kernel/mem/paging/paging.h>

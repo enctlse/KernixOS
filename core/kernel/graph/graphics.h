@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 #include <types.h>
-#include <limine/limine.h>
+#include <limine.h>
 #include <theme/tmx.h>
 #include <theme/stdclrs.h>
 #include <kernel/graph/theme.h>

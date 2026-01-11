@@ -1,7 +1,7 @@
 #ifndef MEM_H
 #define MEM_H
 #include <types.h>
-#include <limine/limine.h>
+#include <limine.h>
 typedef struct limine_memmap_response limine_memmap_response_t;
 typedef struct limine_hhdm_response limine_hhdm_response_t;
 typedef struct limine_framebuffer_response limine_framebuffer_response_t;

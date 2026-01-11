@@ -4,7 +4,7 @@ SRCS = $(shell find $(SRC_DIR) shared -name "*.c" -or -name "*.cpp" -or -name "*
 OBJS = $(SRCS:%=$(BUILD_DIR)/%.o)
 
 .PHONY: all run clean assets
-all: assets $(ISO)
+all: limine/limine assets $(ISO)
 
 assets:
 
@@ -20,8 +20,8 @@ $(ISO): limine.conf $(BUILD_DIR)/kernel.elf
 	@mkdir -p $(ISODIR)/boot/limine $(ISODIR)/EFI/BOOT
 	@cp $(BUILD_DIR)/kernel.elf $(ISODIR)/boot/
 	@cp $< $(ISODIR)/boot/limine/
-	@cp $(addprefix $(INCLUDE_DIR)/limine/limine-, bios.sys bios-cd.bin uefi-cd.bin) $(ISODIR)/boot/limine/
-	@cp $(addprefix $(INCLUDE_DIR)/limine/BOOT, IA32.EFI X64.EFI) $(ISODIR)/EFI/BOOT/
+	@cp $(addprefix limine/limine-, bios.sys bios-cd.bin uefi-cd.bin) $(ISODIR)/boot/limine/
+	@cp $(addprefix limine/BOOT, IA32.EFI X64.EFI) $(ISODIR)/EFI/BOOT/
 
 	@mkdir -p $(ISODIR)/boot
 	@mkdir -p $(ISODIR)/boot/ui
@@ -60,6 +60,12 @@ run: $(ISO)
 		-no-shutdown \
 		-smp 4
 
+limine/limine:
+	rm -rf limine
+	git clone https://codeberg.org/Limine/Limine.git limine --branch=v10.x-binary --depth=1
+	$(MAKE) -C limine \
+		CC="$(CC)"
+	git clone https://codeberg.org/Limine/limine-protocol.git --depth 1 
 
 $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)

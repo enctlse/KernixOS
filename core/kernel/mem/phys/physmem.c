@@ -1,5 +1,5 @@
 #include "physmem.h"
-#include <limine/limine.h>
+#include <limine.h>
 #include <kernel/exceptions/panic.h>
 #include <memory/main.h>
 #include <kernel/communication/serial.h>
