@@ -1,6 +1,6 @@
 #ifndef IDT_H
 #define IDT_H
-#include <types.h>
+#include <outputs/types.h>
 #define IDT_ENTRIES 256
 #define IDT_FLAG_PRESENT    0x80
 #define IDT_FLAG_RING0      0x00

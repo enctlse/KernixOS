@@ -1,6 +1,6 @@
 #ifndef SERIAL_H
 #define SERIAL_H
-#include <types.h>
+#include <outputs/types.h>
 #define COM1 0x3F8
 #define COM2 0x2F8
 void serial_init(void);

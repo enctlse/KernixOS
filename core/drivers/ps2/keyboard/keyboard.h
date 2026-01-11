@@ -1,6 +1,6 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
-#include <types.h>
+#include <outputs/types.h>
 #include <kernel/module/module.h>
 #define KEY_BUFFER_SIZE 128
 typedef struct {

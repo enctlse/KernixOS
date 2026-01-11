@@ -68,12 +68,12 @@ u32 get_color(ThemeColor color) {
         default:            return active_theme->WHITE;
     }
 }
-u32 black()   { return get_color(COLOR_BLACK); }
-u32 bg()      { return get_color(COLOR_BG); }
-u32 red()     { return get_color(COLOR_RED); }
-u32 green()   { return get_color(COLOR_GREEN); }
-u32 yellow()  { return get_color(COLOR_YELLOW); }
-u32 blue()    { return get_color(COLOR_BLUE); }
-u32 purple()  { return get_color(COLOR_PURPLE); }
-u32 cyan()    { return get_color(COLOR_CYAN); }
-u32 white()   { return get_color(COLOR_WHITE); }
+u32 theme_black()   { return get_color(COLOR_BLACK); }
+u32 theme_bg()      { return get_color(COLOR_BG); }
+u32 theme_red()     { return get_color(COLOR_RED); }
+u32 theme_green()   { return get_color(COLOR_GREEN); }
+u32 theme_yellow()  { return get_color(COLOR_YELLOW); }
+u32 theme_blue()    { return get_color(COLOR_BLUE); }
+u32 theme_purple()  { return get_color(COLOR_PURPLE); }
+u32 theme_cyan()    { return get_color(COLOR_CYAN); }
+u32 theme_white()   { return get_color(COLOR_WHITE); }

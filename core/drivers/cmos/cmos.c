@@ -30,11 +30,11 @@ void GetCMOSDate()
     day   = ((day   / 16) * 10) + (day   & 0x0F);
     month = ((month / 16) * 10) + (month & 0x0F);
     year  = ((year  / 16) * 10) + (year  & 0x0F);
-    print_int(month, GFX_WHITE);
-    print("/", GFX_WHITE);
-    print_int(day, GFX_WHITE);
-    print("/", GFX_WHITE);
-    print_int(year, GFX_WHITE);
+    print_int(month, white);
+    print("/", white);
+    print_int(day, white);
+    print("/", white);
+    print_int(year, white);
 }
 void cmos_read_time(cmos_time_t *time) {
     if (!time) return;
@@ -62,12 +62,12 @@ u64 cmos_get_unix_timestamp(void) {
 void GetCMOSTime(void) {
     cmos_time_t time;
     cmos_read_time(&time);
-    if (time.hour < 10) print("0", GFX_WHITE);
-    print_int(time.hour, GFX_WHITE);
-    print(":", GFX_WHITE);
-    if (time.minute < 10) print("0", GFX_WHITE);
-    print_int(time.minute, GFX_WHITE);
-    print(":", GFX_WHITE);
-    if (time.second < 10) print("0", GFX_WHITE);
-    print_int(time.second, GFX_WHITE);
+    if (time.hour < 10) print("0", white);
+    print_int(time.hour, white);
+    print(":", white);
+    if (time.minute < 10) print("0", white);
+    print_int(time.minute, white);
+    print(":", white);
+    if (time.second < 10) print("0", white);
+    print_int(time.second, white);
 }

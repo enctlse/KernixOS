@@ -1,7 +1,7 @@
 #ifndef IRQ_H
 #define IRQ_H
 #include <kernel/cpu/idt.h>
-#include <types.h>
+#include <outputs/types.h>
 #define IRQ0  32
 #define IRQ1  33
 #define IRQ2  34

@@ -1,6 +1,6 @@
 #ifndef PCI_CONFIG_H
 #define PCI_CONFIG_H
-#include <types.h>
+#include <outputs/types.h>
 #define PCI_CONFIG_ADDRESS 0xCF8
 #define PCI_CONFIG_DATA    0xCFC
 #define PCI_VENDOR_ID       0x00

@@ -1,6 +1,6 @@
 #ifndef MOUSE_H
 #define MOUSE_H
-#include <types.h>
+#include <outputs/types.h>
 #include <kernel/module/module.h>
 typedef struct {
     uint32_t width;

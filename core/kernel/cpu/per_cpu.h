@@ -1,6 +1,6 @@
 #ifndef PER_CPU_H
 #define PER_CPU_H
-#include <types.h>
+#include <outputs/types.h>
 #include <kernel/cpu/spinlock.h>
 #include <kernel/proc/scheduler.h>
 typedef struct {

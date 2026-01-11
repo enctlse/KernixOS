@@ -1,10 +1,10 @@
 #include "physmem.h"
 #include <limine/limine.h>
 #include <kernel/exceptions/panic.h>
-#include <memory/main.h>
+#include <drivers/memory/mem.h>
 #include <kernel/communication/serial.h>
 #include <kernel/graph/theme.h>
-#include <theme/tmx.h>
+#include <config/boot.h>
 static struct physmem_pageframe *physmem_pageframes = NULL;
 static u64 physmem_total = 0;
 static u8 *bitmap        = NULL;

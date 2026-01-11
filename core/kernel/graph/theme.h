@@ -1,10 +1,10 @@
 #ifndef THEME_H
 #define THEME_H
-#include <types.h>
+#include <outputs/types.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define THEME_OSNAME_COLOR GFX_CYAN
+#define THEME_OSNAME_COLOR cyan
 typedef enum {
     THEME_STD = 0,
     THEME_FLU = 1
@@ -43,15 +43,15 @@ void sbootup_theme(ThemeType type);
 void sconsole_theme(ThemeType type);
 void spanic_theme(ThemeType type);
 u32 get_color(ThemeColor color);
-u32 black();
-u32 bg();
-u32 red();
-u32 green();
-u32 yellow();
-u32 blue();
-u32 purple();
-u32 cyan();
-u32 white();
+u32 theme_black();
+u32 theme_bg();
+u32 theme_red();
+u32 theme_green();
+u32 theme_yellow();
+u32 theme_blue();
+u32 theme_purple();
+u32 theme_cyan();
+u32 theme_white();
 #ifdef __cplusplus
 }
 #endif

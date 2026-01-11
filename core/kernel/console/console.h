@@ -3,7 +3,7 @@
 #include <kernel/graph/graphics.h>
 #include <kernel/graph/fm.h>
 #include <kernel/graph/theme.h>
-#include <theme/tmx.h>
+#include <config/boot.h>
 #include <config/user.h>
 #include <kernel/module/module.h>
 extern driver_module console_module;

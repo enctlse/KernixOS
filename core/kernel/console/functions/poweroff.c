@@ -1,4 +1,4 @@
-#include <types.h>
+#include <outputs/types.h>
 #include <kernel/include/ports.h>
 #include "../console.h"
 #define POWEROFF_SHUTDOWN 0
@@ -79,28 +79,28 @@ int poweroff(int operation) {
 }
 FHDR(cmd_poweroff) {
     (void)s;
-    print("Shutting down system...\n", GFX_YELLOW);
-    print("Note: May not work on all hardware configurations\n", GFX_RED);
+    print("Shutting down system...\n", yellow);
+    print("Note: May not work on all hardware configurations\n", red);
     int result = poweroff(POWEROFF_SHUTDOWN);
     if (result == -1) {
-        print("Shutdown failed\n", GFX_RED);
+        print("Shutdown failed\n", red);
     }
 }
 FHDR(cmd_reboot) {
     (void)s;
-    print("Restarting system...\n", GFX_YELLOW);
-    print("Note: May not work on all hardware configurations\n", GFX_RED);
+    print("Restarting system...\n", yellow);
+    print("Note: May not work on all hardware configurations\n", red);
     int result = poweroff(POWEROFF_REBOOT);
     if (result == -1) {
-        print("Restart failed\n", GFX_RED);
+        print("Restart failed\n", red);
     }
 }
 FHDR(cmd_shutdown) {
     (void)s;
-    print("Shutting down system...\n", GFX_YELLOW);
-    print("Note: May not work on all hardware configurations\n", GFX_RED);
+    print("Shutting down system...\n", yellow);
+    print("Note: May not work on all hardware configurations\n", red);
     int result = poweroff(POWEROFF_SHUTDOWN);
     if (result == -1) {
-        print("Shutdown failed\n", GFX_RED);
+        print("Shutdown failed\n", red);
     }
 }

@@ -1,6 +1,6 @@
 #ifndef PCI_EXPRESS_H
 #define PCI_EXPRESS_H
-#include <types.h>
+#include <outputs/types.h>
 typedef enum {
     PCIE_SPEED_UNKNOWN = 0,
     PCIE_SPEED_2_5_GT = 1,

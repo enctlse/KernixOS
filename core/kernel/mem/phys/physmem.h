@@ -1,6 +1,6 @@
 #ifndef PHYSMEM_H
 #define PHYSMEM_H
-#include <types.h>
+#include <outputs/types.h>
 #include "../mem.h"
 typedef struct physmem_pageframe {
     u32 rc;

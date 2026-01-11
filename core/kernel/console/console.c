@@ -12,7 +12,7 @@ static int history_count = 0;
 static int history_pos = -1;
 #define MAX_PATH_LEN 256
 char cwd[MAX_PATH_LEN] = "/";  
-static int cmd_count = 26;
+static int cmd_count = 27;
 void cmd_history(const char *args);
 static console_cmd_t commands[MAX_CMDS] = {
     CMDENTRY(cmd_echo, "echo", "Prints text to console", "echo [text]"),
@@ -30,6 +30,7 @@ static console_cmd_t commands[MAX_CMDS] = {
     CMDENTRY(cmd_cd, "cd", "Change directory", "cd [path]"),
     CMDENTRY(cmd_mkdir, "mkdir", "Create directory", "mkdir <name>"),
     CMDENTRY(cmd_touch, "touch", "Create empty file", "touch <name>"),
+    CMDENTRY(cmd_mount, "mount", "Mount filesystem", "mount <src> <tgt> <type>"),
     CMDENTRY(cmd_poweroff, "poweroff", "Power off the system", "poweroff"),
     CMDENTRY(cmd_reboot, "reboot", "Reboot the system", "reboot"),
     CMDENTRY(cmd_shutdown, "shutdown", "Shutdown the system", "shutdown"),
@@ -63,18 +64,18 @@ static void reset_history_pos() {
 }
 void cmd_history(const char *args) {
     if (history_count == 0) {
-        print("No commands in history.\n", GFX_YELLOW);
+        print("No commands in history.\n", yellow);
         return;
     }
-    print("Command history:\n", GFX_CYAN);
+    print("Command history:\n", cyan);
     for (int i = 0; i < history_count; i++) {
         char num_buf[8];
         str_copy(num_buf, "");
         str_append_uint(num_buf, i + 1);
         str_append(num_buf, ": ");
-        print(num_buf, GFX_GREEN);
-        print(command_history[i], GFX_GRAY_70);
-        print("\n", GFX_GRAY_70);
+        print(num_buf, green);
+        print(command_history[i], gray_70);
+        print("\n", gray_70);
     }
 }
 static int console_module_init(void) {
@@ -113,7 +114,7 @@ static void redraw_input_line() {
     cursor_x = input_start_x;
     u32 char_height = fm_get_char_height() * font_scale;
     draw_rect(cursor_x, cursor_y, fb_width - cursor_x, char_height, CONSOLESCREEN_BG_COLOR);
-    string(input_buffer, GFX_GRAY_70);
+    string(input_buffer, gray_70);
     cursor_x = input_start_x + input_pos * fm_get_char_width() * font_scale;
     cursor_draw();
     if (!gui_running && graphics_is_double_buffering_enabled()) {
@@ -161,7 +162,7 @@ void console_handle_key(int c)
         return;
     }
     if (c == '\r') {
-        putchar('\n', GFX_GRAY_70);
+        putchar('\n', gray_70);
         input_buffer[input_pos++] = '\n';
         cursor_draw();
         return;
@@ -267,7 +268,7 @@ void console_handle_key(int c)
             input_pos++;
             redraw_input_line();
         } else {
-            putchar(c, GFX_GRAY_70);
+            putchar(c, gray_70);
         }
         cursor_reset_blink();
         return;
@@ -295,8 +296,8 @@ void console_execute(const char *input)
     } else {
     }
     if (cmd) {
-        putchar('\n', GFX_GRAY_70);
-        putchar('\n', GFX_GRAY_70);
+        putchar('\n', gray_70);
+        putchar('\n', gray_70);
         cmd->func(args);
         banner_force_update();
         console_window_check_scroll();
@@ -304,10 +305,10 @@ void console_execute(const char *input)
             graphics_swap_buffers();
         }
     } else {
-        putchar('\n', GFX_GRAY_70);
-        print(cmd_name, GFX_RED);
-        print(": command not found", GFX_RED);
-        putchar('\n', GFX_GRAY_70);
+        putchar('\n', gray_70);
+        print(cmd_name, red);
+        print(": command not found", red);
+        putchar('\n', gray_70);
         console_window_check_scroll();
         if (!gui_running) {
             graphics_swap_buffers();

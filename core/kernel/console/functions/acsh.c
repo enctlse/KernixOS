@@ -61,22 +61,22 @@ int console_window_needs_scroll(void) {
 FHDR(cmd_echo)
 {
     if (*s == '\0') {
-        print("\n", GFX_GRAY_70);
+        print("\n", gray_70);
         return;
     }
-    print(s, GFX_GRAY_70);
+    print(s, gray_70);
 }
 FHDR(cmd_clear)
 {
     if (*s != '\0') {
-    print("Error: invalid option: ", GFX_RED);
-    print(s, GFX_RED);
-    print("\n", GFX_RED);
+    print("Error: invalid option: ", red);
+    print(s, red);
+    print("\n", red);
     return;
     }
     extern int gui_running;
     if (gui_running) {
-        print("Clear command is disabled in GUI mode. Use 'cls' instead.\n", GFX_YELLOW);
+        print("Clear command is disabled in GUI mode. Use 'cls' instead.\n", yellow);
         return;
     }
     u32 color = CONSOLESCREEN_BG_COLOR;
@@ -89,9 +89,9 @@ FHDR(cmd_clear)
 FHDR(cmd_cls)
 {
     if (*s != '\0') {
-    print("Error: invalid option: ", GFX_RED);
-    print(s, GFX_RED);
-    print("\n", GFX_RED);
+    print("Error: invalid option: ", red);
+    print(s, red);
+    print("\n", red);
     return;
     }
     extern int gui_running;
@@ -105,16 +105,16 @@ FHDR(cmd_cls)
 FHDR(cmd_fsize)
 {
     if (*s != '\0') {
-    print("Error: invalid option: ", GFX_RED);
-    print(s, GFX_RED);
-    print("\n", GFX_RED);
+    print("Error: invalid option: ", red);
+    print(s, red);
+    print("\n", red);
     return;
     }
     if (*s == '\0') {
         char buf[64];
         str_copy(buf, "Current font size: ");
         str_append_uint(buf, font_scale);
-        print(buf, GFX_GRAY_70);
+        print(buf, gray_70);
         return;
     }
     while (*s == ' ') s++;
@@ -124,7 +124,7 @@ FHDR(cmd_fsize)
         s++;
     }
     if (size < 1 || size > 4) {
-        print("Invalid size. Use 1-4\n", GFX_RED);
+        print("Invalid size. Use 1-4\n", red);
         return;
     }
     clear(CONSOLESCREEN_BG_COLOR);
@@ -138,35 +138,35 @@ FHDR(cmd_fsize)
 FHDR(cmd_help)
 {
     if (*s != '\0') {
-    print("Error: invalid option: ", GFX_RED);
-    print(s, GFX_RED);
-    print("\n", GFX_RED);
+    print("Error: invalid option: ", red);
+    print(s, red);
+    print("\n", red);
     return;
     }
     if (*s == '\0') {
-        print("acsh, version 1.0.0.0-release\n", GFX_GRAY_70);
-        print("  echo [text]    - echo [text]\n", GFX_GRAY_70);
-        print("  clear [color]  - clear screen\n", GFX_GRAY_70);
-        print("  gui            - Launch the GUI\n", GFX_GRAY_70);
-        print("  cls            - clear screen (works in GUI)\n", GFX_GRAY_70);
-        print("  help [command] - displays this list\n", GFX_GRAY_70);
-        print("  scale [1-4]    - change screen size\n", GFX_GRAY_70);
-        print("  date           - show current date\n", GFX_GRAY_70);
-        print("  time           - show current time\n", GFX_GRAY_70);
-        print("  calendar       - show date & time\n", GFX_GRAY_70);
-        print("  uptime         - displays the uptime\n", GFX_GRAY_70);
-        print("  fetch          - KernixOS system info\n", GFX_GRAY_70);
-        print("  cat <file>     - show file content\n", GFX_GRAY_70);
-        print("  cd [path]      - Change the current directory\n", GFX_GRAY_70);
-        print("  ls [path]      - list directory contents\n", GFX_GRAY_70);
-        print("  mkdir          - Create the directory\n", GFX_GRAY_70);
-        print("  touch          - Create the file\n", GFX_GRAY_70);
-        print("  reboot         - reboot the system\n", GFX_GRAY_70);
-        print("  meminfo        - heap memory information\n", GFX_GRAY_70);
-        print("  cpuinfo        - heap cpu information\n", GFX_GRAY_70);
-        print("  modules        - shows all modules in fs\n", GFX_GRAY_70);
-        print("  history        - show command history\n", GFX_GRAY_70);
-        print("Type 'help <command>' for details", GFX_CYAN);
+        print("acsh, version 1.0.0.0-release\n", gray_70);
+        print("  echo [text]    - echo [text]\n", gray_70);
+        print("  clear [color]  - clear screen\n", gray_70);
+        print("  gui            - Launch the GUI\n", gray_70);
+        print("  cls            - clear screen (works in GUI)\n", gray_70);
+        print("  help [command] - displays this list\n", gray_70);
+        print("  scale [1-4]    - change screen size\n", gray_70);
+        print("  date           - show current date\n", gray_70);
+        print("  time           - show current time\n", gray_70);
+        print("  calendar       - show date & time\n", gray_70);
+        print("  uptime         - displays the uptime\n", gray_70);
+        print("  fetch          - KernixOS system info\n", gray_70);
+        print("  cat <file>     - show file content\n", gray_70);
+        print("  cd [path]      - Change the current directory\n", gray_70);
+        print("  ls [path]      - list directory contents\n", gray_70);
+        print("  mkdir          - Create the directory\n", gray_70);
+        print("  touch          - Create the file\n", gray_70);
+        print("  reboot         - reboot the system\n", gray_70);
+        print("  meminfo        - heap memory information\n", gray_70);
+        print("  cpuinfo        - heap cpu information\n", gray_70);
+        print("  modules        - shows all modules in fs\n", gray_70);
+        print("  history        - show command history\n", gray_70);
+        print("Type 'help <command>' for details", cyan);
     } else {
         const char *p = s;
         while (*p == ' ') p++;
@@ -175,13 +175,13 @@ FHDR(cmd_help)
             char buf[128];
             str_copy(buf, "\n");
             str_append(buf, cmd->description);
-            print(buf, GFX_GRAY_70);
+            print(buf, gray_70);
             str_copy(buf, "\nUsage: ");
             str_append(buf, cmd->usage);
-            print(buf, GFX_YELLOW);
-            print("\n", GFX_GRAY_70);
+            print(buf, yellow);
+            print("\n", gray_70);
         } else {
-            print("\nCommand not found", GFX_RED);
+            print("\nCommand not found", red);
         }
     }
 }

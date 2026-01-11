@@ -2,6 +2,6 @@
 #include <drivers/ps2/mouse/mouse.h>
 FHDR(cmd_calc) {
     (void)s;
-    print("Calculator GUI - Not implemented yet\n", GFX_YELLOW);
-    print("Use: calc\n", GFX_WHITE);
+    print("Calculator GUI - Not implemented yet\n", yellow);
+    print("Use: calc\n", white);
 }

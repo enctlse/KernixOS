@@ -1,13 +1,13 @@
 #include "module.h"
 #include <string/string.h>
-#include <theme/stdclrs.h>
+#include <ui/theme/colors.h>
 #include <kernel/graph/theme.h>
-#include <theme/tmx.h>
+#include <config/boot.h>
 static driver_module *modules[MAX_MODULES];
 static int module_count = 0;
 void module_init(void) {
-    BOOTUP_PRINT("[MOD] ", GFX_GRAY_70);
-    BOOTUP_PRINT("init module system\n", white());
+    BOOTUP_PRINT("[MOD] ", gray_70);
+    BOOTUP_PRINT("init module system\n", theme_white());
     for (int i = 0; i < MAX_MODULES; i++) {
         modules[i] = NULL;
     }

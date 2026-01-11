@@ -1,6 +1,6 @@
 #ifndef PAGGING_H
 #define PAGGING_H
-#include <types.h>
+#include <outputs/types.h>
 #include "../mem.h"
 #define PTE_PRESENT    (1ULL << 0)
 #define PTE_WRITABLE   (1ULL << 1)
@@ -20,7 +20,7 @@ void paging_unmap_page(u64 virtual_addr);
 void paging_init(limine_hhdm_response_t *hpr);
 u64 map_region_alloc(limine_hhdm_response_t *hpr, u64 virt, u64 size);
 void map_region(limine_hhdm_response_t *hpr, u64 phys, u64 virt, u64 size);
-void map_ulime_region(limine_hhdm_response_t *hpr, u64 phys_start, u64 size);
+void map_user_space_region(limine_hhdm_response_t *hpr, u64 phys_start, u64 size);
 void* phys_to_virt(limine_hhdm_response_t *hpr, u64 phys_addr);
 u64 virt_to_phys(limine_hhdm_response_t *hpr, void* virt_addr);
 #endif

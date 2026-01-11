@@ -1,6 +1,6 @@
 #ifndef USB_KEYBOARD_H
 #define USB_KEYBOARD_H
-#include <types.h>
+#include <outputs/types.h>
 typedef struct __attribute__((packed)) {
     uint8_t modifiers;
     uint8_t reserved;

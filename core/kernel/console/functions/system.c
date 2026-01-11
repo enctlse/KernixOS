@@ -1,5 +1,5 @@
 #include <kernel/console/console.h>
-#include <memory/main.h>
+#include <drivers/memory/mem.h>
 #include <drivers/cmos/cmos.h>
 #include <kernel/module/module.h>
 #include <kernel/exceptions/timer.h>
@@ -11,22 +11,22 @@ FHDR(cmd_modules)
 {
     (void)s;
     if (*s != '\0') {
-    print("Error: invalid option: ", GFX_RED);
-    print(s, GFX_RED);
-    print("\n", GFX_RED);
+    print("Error: invalid option: ", red);
+    print(s, red);
+    print("\n", red);
     return;
 }
-    print("Loaded Modules:\n", GFX_GRAY_70);
+    print("Loaded Modules:\n", gray_70);
     int count = module_get_count();
     if (count == 0) {
-        print("No modules loaded\n", GFX_RED);
+        print("No modules loaded\n", red);
         return;
     }
     char buf[128];
     for (int i = 0; i < count; i++) {
         driver_module *mod = module_get_by_index(i);
         if (mod) {
-            print(mod->mount, GFX_CYAN);
+            print(mod->mount, cyan);
             u32 ver = mod->version;
             u32 major = (ver >> 24) & 0xFF;
             u32 minor = (ver >> 16) & 0xFF;
@@ -38,14 +38,14 @@ FHDR(cmd_modules)
             str_append(buf, ".");
             str_append_uint(buf, patch);
             str_append(buf, "]");
-            print(buf, GFX_GRAY_50);
-            print("\n", GFX_GRAY_70);
+            print(buf, gray_50);
+            print("\n", gray_70);
         }
     }
     str_copy(buf, "\nTotal: ");
     str_append_uint(buf, count);
     str_append(buf, " module(s)");
-    print(buf, GFX_GRAY_70);
+    print(buf, gray_70);
 }
 void print_res() {
     char buf[128];
@@ -54,14 +54,14 @@ void print_res() {
     str_append(buf, "x");
     str_append_uint(buf, get_fb_height());
     str_append(buf, "\n");
-    print(buf, GFX_GRAY_70);
+    print(buf, gray_70);
 }
 void ShowCPUName(){
     const char *cpu_name = cpu_get_brand();
     if (cpu_name[0]) {
-        print(cpu_name, GFX_GRAY_70);
+        print(cpu_name, gray_70);
     } else {
-        print("Unknown CPU", GFX_GRAY_70);
+        print("Unknown CPU", gray_70);
     }
 }
 u32 parse_ip(const char *str) {
@@ -99,125 +99,125 @@ FHDR(cmd_sysinfo)
 {
     (void)s;
      if (*s != '\0') {
-    print("Error: invalid option: ", GFX_RED);
-    print(s, GFX_RED);
-    print("\n", GFX_RED);
+    print("Error: invalid option: ", red);
+    print(s, red);
+    print("\n", red);
     return;
     }
-    print(" 			   ..,oONMMMMMMMMMMN0o,..\n", GFX_RED);
-    print("			  ..lKMMMMMMMMMMMMMMMMMMKl..        ", GFX_RED);        print(PC_NAME, GFX_GREEN); print("@", GFX_GREEN); print(USER_NAME, GFX_GREEN); print("\n", GFX_GREEN);
-    print("		     .lNMMMMMMMMMMMMMMMMMMMMMMNl..      ", GFX_RED);           print("OS: ", GFX_GREEN); print("KernixOS-64bit\n", GFX_GRAY_70);
-    print("		   ..xMMMMMMMMMMMMMMMMMMMMMMMMMMk..     ", GFX_RED);           print("Kernel: ", GFX_GREEN); print("AC-0099\n", GFX_GRAY_70);
-    print("	       .oMMMMMMMMMMMMMMMMMMMMMMMMMMMMo.     ",GFX_RED);                 print("Shell: ", GFX_GREEN); print("acsh 1.0.0.0\n", GFX_GRAY_70);
-    print("	      ..NMMMMMMMMMMMMMMMMMMMMMMMMMMMMN..    ",GFX_RED);                 print("Resolution: ", GFX_GREEN); print_res();
-    print("          .,MMMMMMMMMMMMMMMMMMMMMMMMMMMMMM,.    ",GFX_RED);              print("Bootloader: ", GFX_GREEN); print("Limine \n", GFX_GRAY_70); 
-    print("          ..KMMMMMMMMMMMMMMMMMMMMMMMMMMMM0..    ",GFX_RED);              print("CPU: ", GFX_GREEN); ShowCPUName(); print("\n", GFX_GRAY_70); 
-    print("           .;WMMMMMMMMMMMMMMMMMMMMMMMMMMN,.     ", GFX_RED);             print("Date: ", GFX_GREEN); GetCMOSDate(); print("\n", GFX_GRAY_70);    
-    print("            .:NMMMMMMMMMMMMMMMMMMMMMMMMN;.      ", GFX_RED);                 print("Uptime: ", GFX_GREEN); timer_print_uptime(); print("\n", GFX_GRAY_70);
-    print("             .'kWMMMMMMMMMMMMMMMMMMMMWx..\n", GFX_RED);
-    print("               .'dNMMMMMMMMMMMMMMMMXd..\n", GFX_RED);
-    print("                 ..,lkKXWMMMMWNKkl,..\n", GFX_RED);
-        print("R ", GFX_RED);
-        print("G ", GFX_GREEN);
-        print("B ", GFX_BLUE);
-        print("Y ", GFX_YELLOW);
-        print("M ", GFX_PURPLE);
-        print("C ", GFX_CYAN);
-        print("W ", GFX_GRAY_70);
-        print("K \n", GFX_BLACK);
-    print("                        ", GFX_GREEN);
+    print(" 			   ..,oONMMMMMMMMMMN0o,..\n", red);
+    print("			  ..lKMMMMMMMMMMMMMMMMMMKl..        ", red);        print(Host, green); print("@", green); print(User, green); print("\n", green);
+    print("		     .lNMMMMMMMMMMMMMMMMMMMMMMNl..      ", red);           print("OS: ", green); print("KernixOS-64bit\n", gray_70);
+    print("		   ..xMMMMMMMMMMMMMMMMMMMMMMMMMMk..     ", red);           print("Kernel: ", green); print("AC-0099\n", gray_70);
+    print("	       .oMMMMMMMMMMMMMMMMMMMMMMMMMMMMo.     ",red);                 print("Shell: ", green); print("acsh 1.0.0.0\n", gray_70);
+    print("	      ..NMMMMMMMMMMMMMMMMMMMMMMMMMMMMN..    ",red);                 print("Resolution: ", green); print_res();
+    print("          .,MMMMMMMMMMMMMMMMMMMMMMMMMMMMMM,.    ",red);              print("Bootloader: ", green); print("Limine \n", gray_70); 
+    print("          ..KMMMMMMMMMMMMMMMMMMMMMMMMMMMM0..    ",red);              print("CPU: ", green); ShowCPUName(); print("\n", gray_70); 
+    print("           .;WMMMMMMMMMMMMMMMMMMMMMMMMMMN,.     ", red);             print("Date: ", green); GetCMOSDate(); print("\n", gray_70);    
+    print("            .:NMMMMMMMMMMMMMMMMMMMMMMMMN;.      ", red);                 print("Uptime: ", green); timer_print_uptime(); print("\n", gray_70);
+    print("             .'kWMMMMMMMMMMMMMMMMMMMMWx..\n", red);
+    print("               .'dNMMMMMMMMMMMMMMMMXd..\n", red);
+    print("                 ..,lkKXWMMMMWNKkl,..\n", red);
+        print("R ", red);
+        print("G ", green);
+        print("B ", blue);
+        print("Y ", yellow);
+        print("M ", purple);
+        print("C ", cyan);
+        print("W ", gray_70);
+        print("K \n", black);
+    print("                        ", green);
 }
 FHDR(cmd_cpuinfo)
 {
     (void)s;
     if (*s != '\0') {
-    print("Error: invalid option: ", GFX_RED);
-    print(s, GFX_RED);
-    print("\n", GFX_RED);
+    print("Error: invalid option: ", red);
+    print(s, red);
+    print("\n", red);
     return;
     }
     cpu_info_t *info = cpu_get_info();
     char buf[128];
-    print("CPU Information:\n", GFX_CYAN);
-    print("Vendor: ", GFX_GREEN);
-    print(info->vendor, GFX_GRAY_70);
-    print("\n", GFX_GRAY_70);
-    print("Brand: ", GFX_GREEN);
-    print(info->brand[0] ? info->brand : "Unknown", GFX_GRAY_70);
-    print("\n", GFX_GRAY_70);
-    print("Family: ", GFX_GREEN);
+    print("CPU Information:\n", cyan);
+    print("Vendor: ", green);
+    print(info->vendor, gray_70);
+    print("\n", gray_70);
+    print("Brand: ", green);
+    print(info->brand[0] ? info->brand : "Unknown", gray_70);
+    print("\n", gray_70);
+    print("Family: ", green);
     str_copy(buf, "");
     str_append_uint(buf, info->family);
-    print(buf, GFX_GRAY_70);
-    print("\n", GFX_GRAY_70);
-    print("Model: ", GFX_GREEN);
+    print(buf, gray_70);
+    print("\n", gray_70);
+    print("Model: ", green);
     str_copy(buf, "");
     str_append_uint(buf, info->model);
-    print(buf, GFX_GRAY_70);
-    print("\n", GFX_GRAY_70);
-    print("Stepping: ", GFX_GREEN);
+    print(buf, gray_70);
+    print("\n", gray_70);
+    print("Stepping: ", green);
     str_copy(buf, "");
     str_append_uint(buf, info->stepping);
-    print(buf, GFX_GRAY_70);
-    print("\n", GFX_GRAY_70);
-    print("Cores: ", GFX_GREEN);
+    print(buf, gray_70);
+    print("\n", gray_70);
+    print("Cores: ", green);
     str_copy(buf, "");
     str_append_uint(buf, info->cores);
-    print(buf, GFX_GRAY_70);
-    print("\n", GFX_GRAY_70);
-    print("Threads: ", GFX_GREEN);
+    print(buf, gray_70);
+    print("\n", gray_70);
+    print("Threads: ", green);
     str_copy(buf, "");
     str_append_uint(buf, info->threads);
-    print(buf, GFX_GRAY_70);
-    print("\n", GFX_GRAY_70);
-    print("Cache Line Size: ", GFX_GREEN);
+    print(buf, gray_70);
+    print("\n", gray_70);
+    print("Cache Line Size: ", green);
     str_copy(buf, "");
     str_append_uint(buf, info->cache_line_size);
     str_append(buf, " bytes");
-    print(buf, GFX_GRAY_70);
-    print("\n", GFX_GRAY_70);
+    print(buf, gray_70);
+    print("\n", gray_70);
     if (info->cache_l1d) {
-        print("L1 Data Cache: ", GFX_GREEN);
+        print("L1 Data Cache: ", green);
         str_copy(buf, "");
         str_append_uint(buf, info->cache_l1d);
         str_append(buf, " KB");
-        print(buf, GFX_GRAY_70);
-        print("\n", GFX_GRAY_70);
+        print(buf, gray_70);
+        print("\n", gray_70);
     }
     if (info->cache_l1i) {
-        print("L1 Instruction Cache: ", GFX_GREEN);
+        print("L1 Instruction Cache: ", green);
         str_copy(buf, "");
         str_append_uint(buf, info->cache_l1i);
         str_append(buf, " KB");
-        print(buf, GFX_GRAY_70);
-        print("\n", GFX_GRAY_70);
+        print(buf, gray_70);
+        print("\n", gray_70);
     }
     if (info->cache_l2) {
-        print("L2 Cache: ", GFX_GREEN);
+        print("L2 Cache: ", green);
         str_copy(buf, "");
         str_append_uint(buf, info->cache_l2);
         str_append(buf, " KB");
-        print(buf, GFX_GRAY_70);
-        print("\n", GFX_GRAY_70);
+        print(buf, gray_70);
+        print("\n", gray_70);
     }
     if (info->cache_l3) {
-        print("L3 Cache: ", GFX_GREEN);
+        print("L3 Cache: ", green);
         str_copy(buf, "");
         str_append_uint(buf, info->cache_l3);
         str_append(buf, " KB");
-        print(buf, GFX_GRAY_70);
-        print("\n", GFX_GRAY_70);
+        print(buf, gray_70);
+        print("\n", gray_70);
     }
-    print("Features (EDX): ", GFX_GREEN);
-print_hex(info->features_edx, GFX_GRAY_70);
-print("\n", GFX_GRAY_70);
-print("Features (ECX): ", GFX_GREEN);
-print_hex(info->features_ecx, GFX_GRAY_70);
-print("\n", GFX_GRAY_70);
-print("Extended Features (EBX): ", GFX_GREEN);
-print_hex(info->extended_features_ebx, GFX_GRAY_70);
-print("\n", GFX_GRAY_70);
-print("Extended Features (ECX): ", GFX_GREEN);
-print_hex(info->extended_features_ecx, GFX_GRAY_70);
-print("\n", GFX_GRAY_70);
+    print("Features (EDX): ", green);
+print_hex(info->features_edx, gray_70);
+print("\n", gray_70);
+print("Features (ECX): ", green);
+print_hex(info->features_ecx, gray_70);
+print("\n", gray_70);
+print("Extended Features (EBX): ", green);
+print_hex(info->extended_features_ebx, gray_70);
+print("\n", gray_70);
+print("Extended Features (ECX): ", green);
+print_hex(info->extended_features_ecx, gray_70);
+print("\n", gray_70);
 }

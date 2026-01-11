@@ -1,7 +1,7 @@
 #include "slab.h"
 #include <kernel/communication/serial.h>
 #include <kernel/exceptions/panic.h>
-#include <memory/main.h>
+#include <drivers/memory/mem.h>
 void slab_init(slab_allocator_t *ptr_slab, u64 *ptr_slab_meta, u64 *ptr_slab_data) {
   if (!ptr_slab) {
       panic("\nInvalid ptr slab\n");

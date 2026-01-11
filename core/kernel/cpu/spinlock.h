@@ -1,6 +1,6 @@
 #ifndef SPINLOCK_H
 #define SPINLOCK_H
-#include <types.h>
+#include <outputs/types.h>
 typedef struct {
     volatile u32 locked;
 } spinlock_t;

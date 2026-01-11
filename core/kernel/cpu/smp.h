@@ -1,6 +1,6 @@
 #ifndef SMP_H
 #define SMP_H
-#include <types.h>
+#include <outputs/types.h>
 #include <kernel/include/reqs.h>
 #define MAX_CPUS 256
 typedef struct {

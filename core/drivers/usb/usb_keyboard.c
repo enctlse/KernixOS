@@ -20,13 +20,13 @@ static uint8_t prev_modifiers = 0;
 int usb_keyboard_init(void) {
     usb_kb_initialized = 0;
     usb_kb_initialized = 1;
-    print("USB Keyboard: Initialized\n", GFX_GREEN);
+    print("USB Keyboard: Initialized\n", green);
     return 0;
 }
 void usb_keyboard_set_callback(usb_kb_callback_t cb) {
     usb_kb_callback = cb;
     if (cb) {
-        print("USB Keyboard: Callback set\n", GFX_CYAN);
+        print("USB Keyboard: Callback set\n", cyan);
     }
 }
 int usb_keyboard_is_initialized(void) {

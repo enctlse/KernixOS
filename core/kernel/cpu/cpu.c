@@ -1,9 +1,9 @@
 #include "cpu.h"
 #include <string/string.h>
-#include <memory/main.h>
-#include <theme/stdclrs.h>
+#include <drivers/memory/mem.h>
+#include <ui/theme/colors.h>
 #include <kernel/graph/theme.h>
-#include <theme/tmx.h>
+#include <config/boot.h>
 static cpu_info_t cpu_info;
 static void cpuid(u32 code, u32 *a, u32 *b, u32 *c, u32 *d) {
     __asm__ volatile("cpuid"
@@ -16,7 +16,7 @@ static void cpuid_ext(u32 code, u32 subcode, u32 *a, u32 *b, u32 *c, u32 *d) {
         : "a"(code), "c"(subcode));
 }
 void cpu_detect(void) {
-    BOOTUP_PRINT("[CPU] ", GFX_GRAY_70);
+    BOOTUP_PRINT("[CPU] ", gray_70);
     memset(&cpu_info, 0, sizeof(cpu_info_t));
     u32 eax, ebx, ecx, edx;
     cpuid(0, &eax, &ebx, &ecx, &edx);
@@ -112,18 +112,18 @@ void cpu_detect(void) {
     }
     cpuid(0x80000008, &eax, &ebx, &ecx, &edx);
     cpu_info.cores = (ecx & 0xFF) + 1;
-    BOOTUP_PRINT("detected: ", white());
-    BOOTUP_PRINT(cpu_info.brand, white());
-    BOOTUP_PRINT("\n", white());
-    BOOTUP_PRINT("  Vendor: ", white());
-    BOOTUP_PRINT(cpu_info.vendor, white());
-    BOOTUP_PRINT("\n", white());
-    BOOTUP_PRINT("  Cores: ", white());
-    BOOTUP_PRINT_INT(cpu_info.cores, white());
-    BOOTUP_PRINT("\n", white());
-    BOOTUP_PRINT("  Threads: ", white());
-    BOOTUP_PRINT_INT(cpu_info.threads, white());
-    BOOTUP_PRINT("\n", white());
+    BOOTUP_PRINT("detected: ", theme_white());
+    BOOTUP_PRINT(cpu_info.brand, theme_white());
+    BOOTUP_PRINT("\n", theme_white());
+    BOOTUP_PRINT("  Vendor: ", theme_white());
+    BOOTUP_PRINT(cpu_info.vendor, theme_white());
+    BOOTUP_PRINT("\n", theme_white());
+    BOOTUP_PRINT("  Cores: ", theme_white());
+    BOOTUP_PRINT_INT(cpu_info.cores, theme_white());
+    BOOTUP_PRINT("\n", theme_white());
+    BOOTUP_PRINT("  Threads: ", theme_white());
+    BOOTUP_PRINT_INT(cpu_info.threads, theme_white());
+    BOOTUP_PRINT("\n", theme_white());
 }
 const char* cpu_get_vendor(void) {
     return cpu_info.vendor;
@@ -136,10 +136,10 @@ cpu_info_t* cpu_get_info(void) {
 }
 int cpu_has_feature(u32 feature) {
     int result = (cpu_info.features_edx & feature) != 0;
-    BOOTUP_PRINT("[CPU] Feature 0x", GFX_GRAY_70);
-    BOOTUP_PRINT_INT(feature, GFX_CYAN);
-    BOOTUP_PRINT(" check: ", GFX_GRAY_70);
-    BOOTUP_PRINT(result ? "true" : "false", result ? GFX_GREEN : GFX_RED);
-    BOOTUP_PRINT("\n", GFX_GRAY_70);
+    BOOTUP_PRINT("[CPU] Feature 0x", gray_70);
+    BOOTUP_PRINT_INT(feature, cyan);
+    BOOTUP_PRINT(" check: ", gray_70);
+    BOOTUP_PRINT(result ? "true" : "false", result ? green : red);
+    BOOTUP_PRINT("\n", gray_70);
     return result;
 }

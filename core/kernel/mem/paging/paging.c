@@ -3,9 +3,9 @@
 #include "../mem.h"
 #include "../phys/physmem.h"
 #include <kernel/exceptions/panic.h>
-#include <memory/main.h>
+#include <drivers/memory/mem.h>
 #include <string/string.h>
-#include <theme/stdclrs.h>
+#include <ui/theme/colors.h>
 #include <kernel/communication/serial.h>
 extern u8 _kernel_start[];
 extern u8 _kernel_end[];
@@ -99,7 +99,7 @@ int is_page_mapped(limine_hhdm_response_t *hpr, u64 virtual_addr) {
     page_table_t* pt = (page_table_t*)(pt_phys + hpr->offset);
     return (pt->entries[pt_index] & PTE_PRESENT) != 0;
 }
-void map_ulime_region(limine_hhdm_response_t *hpr, u64 phys_start, u64 size) {
+void map_user_space_region(limine_hhdm_response_t *hpr, u64 phys_start, u64 size) {
     if (ULIME_START % PAGE_SIZE != 0) {
         panic("ULIME_START not page aligned!");
     }

@@ -3,7 +3,7 @@
 #include <kernel/graph/fm.h>
 #include <kernel/include/logo.h>
 #include <kernel/graph/theme.h>
-#include <theme/tmx.h>
+#include <config/boot.h>
 #include <drivers/ps2/ps2.h>
 #include <drivers/ps2/keyboard/keyboard.h>
 #include <drivers/ps2/mouse/mouse.h>
@@ -14,52 +14,53 @@
 #include <kernel/proc/scheduler.h>
 #include <kernel/cpu/gdt.h>
 #include <kernel/cpu/idt.h>
-#include <memory/main.h>
+#include <drivers/memory/mem.h>
 #include <kernel/mem/meminclude.h>
 #include <kernel/console/console.h>
 #include <kernel/communication/serial.h>
 #include "exceptions/panic.h"
 #include <kernel/exceptions/timer.h>
 #include <kernel/exceptions/panic.h>
-#include <file_systems/vfs/vfs.h>
-#include <file_systems/vfs/init.h>
+#include <fs/vfs/vfs.h>
+#include <fs/vfs/init.h>
 #include <kernel/module/module.h>
 #include <kernel/pci/pci.h>
 #include <drivers/cmos/cmos.h>
+#include <drivers/ata/ata.h>
 static void boot_log_component(const char* component, int success, const char* details) {
     if (success) {
-        BOOTUP_PRINT("[ OK ] ", GFX_GREEN);
-        BOOTUP_PRINT(component, GFX_GRAY_70);
+        BOOTUP_PRINT("[ OK ] ", green);
+        BOOTUP_PRINT(component, gray_70);
         if (details && details[0] != '\0') {
-            BOOTUP_PRINT(" - ", GFX_GRAY_70);
-            BOOTUP_PRINT(details, GFX_GRAY_70);
+            BOOTUP_PRINT(" - ", gray_70);
+            BOOTUP_PRINT(details, gray_70);
         }
-        BOOTUP_PRINT("\n", GFX_GRAY_70);
+        BOOTUP_PRINT("\n", gray_70);
     } else {
-        BOOTUP_PRINT("[FAILED] ", GFX_RED);
-        BOOTUP_PRINT(component, GFX_GRAY_70);
+        BOOTUP_PRINT("[FAILED] ", red);
+        BOOTUP_PRINT(component, gray_70);
         if (details && details[0] != '\0') {
-            BOOTUP_PRINT(" - ", GFX_GRAY_70);
-            BOOTUP_PRINT(details, GFX_GRAY_70);
+            BOOTUP_PRINT(" - ", gray_70);
+            BOOTUP_PRINT(details, gray_70);
         }
-        BOOTUP_PRINT("\n", GFX_GRAY_70);
+        BOOTUP_PRINT("\n", gray_70);
     }
 }
 static void boot_log_info(const char* message) {
-    BOOTUP_PRINT("[INFO] ", GFX_GRAY_70);
-    BOOTUP_PRINT(message, GFX_GRAY_70);
-    BOOTUP_PRINT("\n", GFX_GRAY_70);
+    BOOTUP_PRINT("[INFO] ", gray_70);
+    BOOTUP_PRINT(message, gray_70);
+    BOOTUP_PRINT("\n", gray_70);
 }
 static void boot_log_print(const char* message) {
-    BOOTUP_PRINT(message, GFX_GRAY_70);
-    BOOTUP_PRINT("\n", GFX_GRAY_70);
+    BOOTUP_PRINT(message, gray_70);
+    BOOTUP_PRINT("\n", gray_70);
 }
 static void boot_log_error(const char* component, const char* error) {
-    BOOTUP_PRINT("[ERROR] ", GFX_RED);
-    BOOTUP_PRINT(component, GFX_GRAY_70);
-    BOOTUP_PRINT(" - ", GFX_GRAY_70);
-    BOOTUP_PRINT(error, GFX_RED);
-    BOOTUP_PRINT("\n", GFX_GRAY_70);
+    BOOTUP_PRINT("[ERROR] ", red);
+    BOOTUP_PRINT(component, gray_70);
+    BOOTUP_PRINT(" - ", gray_70);
+    BOOTUP_PRINT(error, red);
+    BOOTUP_PRINT("\n", gray_70);
 }
 void _start(void)
 {
@@ -70,7 +71,7 @@ void _start(void)
     sconsole_theme(THEME_FLU);
     spanic_theme(THEME_STD);
     boot_log_component("Themes", 1, "Color themes and contexts initialized");
-    clear(bg());
+    clear(theme_bg());
     boot_log_component("Display", 1, "Screen cleared and ready for boot logs");
     boot_log_info("Starting AC-0099 initialization...");
     boot_log_info("Boot sequence initiated");
@@ -116,52 +117,52 @@ void _start(void)
     paging_init(hhdm_request.response);
     boot_log_component("Virtual Memory", 1, "Paging system initialized with page tables");
     boot_log_info("Allocating kernel heap memory...");
-    u64 phys_klime = map_region_alloc(hhdm_request.response, HEAP_START, HEAP_SIZE);
-    klime_t *klime = klime_init((u64 *)HEAP_START, HEAP_SIZE);
-    char klime_info[64];
-    klime_info[0] = '\0';
-    str_copy(klime_info, "Allocated ");
-    str_append_uint(klime_info, HEAP_SIZE / 1024 / 1024);
-    str_append(klime_info, "MB for kernel heap");
-    boot_log_component("Kernel Memory (KLIME)", 1, klime_info);
+    u64 phys_kernel_memory = map_region_alloc(hhdm_request.response, HEAP_START, HEAP_SIZE);
+    kernel_memory_t *kernel_memory = kernel_memory_init((u64 *)HEAP_START, HEAP_SIZE);
+    char kernel_memory_info[64];
+    kernel_memory_info[0] = '\0';
+    str_copy(kernel_memory_info, "Allocated ");
+    str_append_uint(kernel_memory_info, HEAP_SIZE / 1024 / 1024);
+    str_append(kernel_memory_info, "MB for kernel heap");
+    boot_log_component("Kernel Memory (KERNEL_MEMORY)", 1, kernel_memory_info);
     boot_log_info("Setting up graphics memory management...");
     if (!framebuffer_request.response) {
         boot_log_error("Graphics Memory", "Limine response NULL");
-        panic("Cant initialize glime limine response NULL");
+        panic("Cant initialize graphics limine response NULL");
     }
     if (framebuffer_request.response->framebuffer_count < 1) {
         boot_log_error("Graphics Memory", "No framebuffers available");
-        panic("Cant initialize glime limine framebuffer_count 0");
+        panic("Cant initialize graphics limine framebuffer_count 0");
     }
-    u64 phys_glime = map_region_alloc(hhdm_request.response, GRAPHICS_START, GRAPHICS_SIZE);
-    limine_framebuffer_t *fb_glime = framebuffer_request.response->framebuffers[0];
-    glime_response_t glres;
-    glres.start_framebuffer = (u64 *)fb_glime->address;
-    glres.width  = (u64)fb_glime->width;
-    glres.height = (u64)fb_glime->height;
-    glres.pitch  = (u64)fb_glime->pitch;
-    glime_t *glime = glime_init(&glres, (u64 *)GRAPHICS_START, GRAPHICS_SIZE);
-    char glime_info[64];
-    glime_info[0] = '\0';
-    str_copy(glime_info, "Graphics buffer: ");
-    str_append_uint(glime_info, GRAPHICS_SIZE / 1024 / 1024);
-    str_append(glime_info, "MB allocated");
-    boot_log_component("Graphics Memory (GLIME)", 1, glime_info);
+    u64 phys_graphics = map_region_alloc(hhdm_request.response, GRAPHICS_START, GRAPHICS_SIZE);
+    limine_framebuffer_t *fb_graphics = framebuffer_request.response->framebuffers[0];
+    graphics_response_t graphics_res;
+    graphics_res.start_framebuffer = (u64 *)fb_graphics->address;
+    graphics_res.width  = (u64)fb_graphics->width;
+    graphics_res.height = (u64)fb_graphics->height;
+    graphics_res.pitch  = (u64)fb_graphics->pitch;
+    graphics_manager_t *graphics_manager = graphics_manager_init(&graphics_res, (u64 *)GRAPHICS_START, GRAPHICS_SIZE);
+    char graphics_info[64];
+    graphics_info[0] = '\0';
+    str_copy(graphics_info, "Graphics buffer: ");
+    str_append_uint(graphics_info, GRAPHICS_SIZE / 1024 / 1024);
+    str_append(graphics_info, "MB allocated");
+    boot_log_component("Graphics Memory (GRAPHICS)", 1, graphics_info);
     boot_log_info("Initializing 2D graphics rendering...");
-    graphics_init(fb, klime);
+    graphics_init(fb, kernel_memory);
     graphics_disable_double_buffering();
     boot_log_component("Graphics System", 1, "2D graphics rendering initialized with drawing primitives");
     boot_log_info("Setting up userspace memory management...");
-    u64 phys_ulime = map_region_alloc(hhdm_request.response, ULIME_START, ULIME_META_SIZE);
-    ulime_t *ulime = ulime_init(hhdm_request.response, klime, glime, phys_ulime);
-    if (!ulime) {
-        boot_log_error("Userspace Memory (ULIME)", "Failed to initialize userspace memory manager");
-        BOOTUP_PRINTF("Errorcode 1101: ulime is not initialized.");
-        panic("Errorcode 1011: ulime is not initialized.");
+    u64 phys_user_space = map_region_alloc(hhdm_request.response, ULIME_START, ULIME_META_SIZE);
+    user_space_t *user_space = user_space_init(hhdm_request.response, kernel_memory, graphics_manager, phys_user_space);
+    if (!user_space) {
+        boot_log_error("Userspace Memory (USER_SPACE)", "Failed to initialize userspace memory manager");
+        BOOTUP_PRINTF("Errorcode 1101: user_space is not initialized.");
+        panic("Errorcode 1011: user_space is not initialized.");
     }
-    boot_log_component("Userspace Memory (ULIME)", 1, "Userspace memory manager ready with process isolation");
+    boot_log_component("Userspace Memory (USER_SPACE)", 1, "Userspace memory manager ready with process isolation");
     boot_log_info("Initializing virtual filesystem...");
-    fs_system_init(klime);
+    fs_system_init(kernel_memory);
     boot_log_component("Filesystem", 1, "Virtual filesystem initialized with VFS layer");
     boot_log_info("Setting up display cursor...");
     boot_log_component("Cursor", 1, "Display cursor positioned for boot logs");
@@ -228,6 +229,9 @@ void _start(void)
     str_append_uint(pci_info, pci_count);
     str_append(pci_info, " devices enumerated");
     boot_log_component("PCI", 1, pci_info);
+    boot_log_info("Initializing ATA driver...");
+    ata_init();
+    boot_log_component("ATA", 1, "ATA/IDE driver initialized");
     boot_log_info("Initializing Ethernet driver...");
     boot_log_component("Ethernet (e1000)", 1, "Intel 8254x Ethernet driver initialized");
     boot_log_info("Initializing network stack...");
@@ -311,12 +315,12 @@ void _start(void)
     boot_log_print("");
     boot_log_print("");
     boot_log_print("");
-    boot_log_print("Kernel(AC-0099) version: 1.1.5 - release.");
+    boot_log_print("Kernel(AC-0099) version: 1.2.0 - release.");
     boot_log_print("KernixOS: Welcome.");
     boot_log_print("Type 'help' for available commands");
     console_init();
     setcontext(THEME_CONSOLE);
-    putchar('\n', GFX_GRAY_70);
+    putchar('\n', gray_70);
     shell_print_prompt();
     console_set_input_start_x();
     cursor_enable();

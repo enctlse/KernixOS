@@ -3,14 +3,14 @@
 #include "config.h"
 #include "express.h"
 #include <string/string.h>
-#include <theme/stdclrs.h>
+#include <ui/theme/colors.h>
 #include <kernel/graph/theme.h>
-#include <theme/tmx.h>
+#include <config/boot.h>
 void pci_init(void) {
     char buf[64];
     buf[0] = '\0';
-    BOOTUP_PRINT("[PCI] ", GFX_GRAY_70);
-    BOOTUP_PRINT("Init PCI/PCIe \n", white());
+    BOOTUP_PRINT("[PCI] ", gray_70);
+    BOOTUP_PRINT("Init PCI/PCIe \n", theme_white());
     pci_device_init();
     int count = pci_device_get_count();
     int pcie_count = 0;
@@ -20,11 +20,11 @@ void pci_init(void) {
             pcie_count++;
         }
     }
-    BOOTUP_PRINT("[PCI] ", GFX_GRAY_70);
-    BOOTUP_PRINT("found: ", white());
+    BOOTUP_PRINT("[PCI] ", gray_70);
+    BOOTUP_PRINT("found: ", theme_white());
     str_append_uint(buf, pcie_count);
-    BOOTUP_PRINT(buf, white());
-    BOOTUP_PRINT(" device(s)\n", white());
+    BOOTUP_PRINT(buf, theme_white());
+    BOOTUP_PRINT(" device(s)\n", theme_white());
 }
 int pci_get_device_count(void) {
     return pci_device_get_count();

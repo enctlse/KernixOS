@@ -6,8 +6,8 @@
 #include <kernel/console/functions.h>
 #include <kernel/console/console.h>
 #include <kernel/exceptions/timer.h>
-#include <file_systems/vfs/vfs.h>
-#include <kernel/mem/klime/klime.h>
+#include <fs/vfs/vfs.h>
+#include <kernel/mem/kernel_memory/kernel_memory.h>
 #include <gui/programs/terminal.h>
 #include <drivers/cmos/cmos.h>
 gui_state_t gui_state = {0};
@@ -23,7 +23,7 @@ static int gui_frame_count = 0;
 #define VSYNC_WAIT_MS 16
 static dirty_rect_t dirty_rects[MAX_DIRTY_RECTS];
 static int dirty_rect_count = 0;
-extern void* fs_klime;
+extern void* fs_kernel_memory;
 #define MENU_BG_WHITE   0xFFFFFFFF
 #define MENU_HIGHLIGHT  0xFFE0E0E0
 #define MENU_TEXT_MAIN  0xFF333333
@@ -143,42 +143,42 @@ typedef struct {
 bmp_image_t* gui_load_bmp(const char* path) {
     int fd = fs_open(path, O_RDONLY);
     if (fd < 0) {
-        print("Failed to open BMP file: ", GFX_RED);
-        print(path, GFX_RED);
-        print("\n", GFX_RED);
+        print("Failed to open BMP file: ", red);
+        print(path, red);
+        print("\n", red);
         return NULL;
     }
     bmp_file_header_t file_header;
     bmp_info_header_t info_header;
     ssize_t read_bytes = fs_read(fd, &file_header, sizeof(bmp_file_header_t));
     if (read_bytes != (ssize_t)sizeof(bmp_file_header_t) || file_header.type != 0x4D42) {
-        print("Invalid BMP file header\n", GFX_RED);
+        print("Invalid BMP file header\n", red);
         fs_close(fd);
         return NULL;
     }
     read_bytes = fs_read(fd, &info_header, sizeof(bmp_info_header_t));
     if (read_bytes != (ssize_t)sizeof(bmp_info_header_t)) {
-        print("Failed to read BMP info header\n", GFX_RED);
+        print("Failed to read BMP info header\n", red);
         fs_close(fd);
         return NULL;
     }
     if (info_header.bpp != 32) {
-        print("Unsupported BMP format. Need 32-bit RGBA\n", GFX_RED);
+        print("Unsupported BMP format. Need 32-bit RGBA\n", red);
         fs_close(fd);
         return NULL;
     }
-    bmp_image_t* image = (bmp_image_t*)klime_alloc((klime_t*)fs_klime, sizeof(bmp_image_t), 1);
+    bmp_image_t* image = (bmp_image_t*)kernel_memory_alloc((kernel_memory_t*)fs_kernel_memory, sizeof(bmp_image_t), 1);
     if (!image) {
-        print("Failed to allocate BMP image\n", GFX_RED);
+        print("Failed to allocate BMP image\n", red);
         fs_close(fd);
         return NULL;
     }
     image->width = info_header.width;
     image->height = info_header.height;
-    image->pixels = (u32*)klime_alloc((klime_t*)fs_klime, sizeof(u32), info_header.width * info_header.height);
+    image->pixels = (u32*)kernel_memory_alloc((kernel_memory_t*)fs_kernel_memory, sizeof(u32), info_header.width * info_header.height);
     if (!image->pixels) {
-        print("Failed to allocate BMP pixels\n", GFX_RED);
-        klime_free((klime_t*)fs_klime, (u64*)image);
+        print("Failed to allocate BMP pixels\n", red);
+        kernel_memory_free((kernel_memory_t*)fs_kernel_memory, (u64*)image);
         fs_close(fd);
         return NULL;
     }
@@ -194,7 +194,7 @@ bmp_image_t* gui_load_bmp(const char* path) {
     read_bytes = fs_read(fd, bmp_pixels, (size_t)info_header.width * info_header.height * 4);
     fs_close(fd);
     if (read_bytes != (ssize_t)((size_t)info_header.width * info_header.height * 4)) {
-        print("Failed to read BMP pixel data\n", GFX_RED);
+        print("Failed to read BMP pixel data\n", red);
         gui_free_bmp(image);
         return NULL;
     }
@@ -208,23 +208,23 @@ bmp_image_t* gui_load_bmp(const char* path) {
             image->pixels[y * info_header.width + x] = (a << 24) | (r << 16) | (g << 8) | b;
         }
     }
-    print("Loaded BMP: ", GFX_GREEN);
-    print(path, GFX_GREEN);
+    print("Loaded BMP: ", green);
+    print(path, green);
     char buf[32];
     str_copy(buf, "");
     str_append_uint(buf, image->width);
     str_append(buf, "x");
     str_append_uint(buf, image->height);
-    print(buf, GFX_GREEN);
-    print("\n", GFX_GREEN);
+    print(buf, green);
+    print("\n", green);
     return image;
 }
 void gui_free_bmp(bmp_image_t* image) {
     if (!image) return;
     if (image->pixels) {
-        klime_free((klime_t*)fs_klime, (u64*)image->pixels);
+        kernel_memory_free((kernel_memory_t*)fs_kernel_memory, (u64*)image->pixels);
     }
-    klime_free((klime_t*)fs_klime, (u64*)image);
+    kernel_memory_free((kernel_memory_t*)fs_kernel_memory, (u64*)image);
 }
 void gui_mark_dirty(int x, int y, int width, int height) {
     if (dirty_rect_count >= MAX_DIRTY_RECTS) {
@@ -547,12 +547,12 @@ void gui_draw_window(gui_window_t* window) {
         bg_w = content_w - 2;
         bg_h = content_h - 2;
     } else {
-        u32 title_color = window->focused ? 0xFF1A252F : 0xFF2C3E50;
+        u32 window_title_color = window->focused ? 0xFF1A252F : 0xFF2C3E50;
         int title_x = content_x;
         int title_y = content_y;
         int title_w = content_w;
         int title_h = WINDOW_TITLE_HEIGHT;
-        draw_rect(title_x, title_y, title_w, title_h, title_color);
+        draw_rect(title_x, title_y, title_w, title_h, window_title_color);
         draw_rect(title_x, title_y + title_h, title_w, 1, 0xFF000000);
         bg_x = content_x;
         bg_y = content_y + WINDOW_TITLE_HEIGHT;
@@ -589,10 +589,10 @@ void gui_draw_window(gui_window_t* window) {
 void gui_draw_button(gui_button_t* button) {
     if (!button) return;
     u32 button_color = 0xFFECF0F1;
-    u32 text_color = 0xFF2C3E50;
+    u32 button_text_color = 0xFF2C3E50;
     if (button->state == BUTTON_STATE_PRESSED) {
         button_color = 0xFFBDC3C7;
-        text_color = 0xFF1A252F;
+        button_text_color = 0xFF1A252F;
     } else if (button->state == BUTTON_STATE_HOVER) {
         button_color = 0xFFD5DBDB;
     }
@@ -603,7 +603,7 @@ void gui_draw_button(gui_button_t* button) {
     }
     int text_x = button->x + (button->width - str_len(button->text) * 8) / 2;
     int text_y = button->y + (button->height - 16) / 2;
-    gui_draw_text_fast(button->text, text_x, text_y, text_color);
+    gui_draw_text_fast(button->text, text_x, text_y, button_text_color);
 }
 int gui_is_point_in_rect(int px, int py, int rx, int ry, int rw, int rh) {
     return px >= rx && px < rx + rw && py >= ry && py < ry + rh;
@@ -822,7 +822,7 @@ void gui_init() {
  str_append(debug_buf, "x");
  str_append_uint(debug_buf, fb_h);
  str_append(debug_buf, "\n");
- printbs(debug_buf, GFX_RED);
+ printbs(debug_buf, red);
         return;
     }
  int max_term_width = (int)fb_w - 100;
@@ -851,7 +851,7 @@ void gui_init() {
     gui_mode = 1;
     char buf[64];
     str_copy(buf, "GUI_INIT: gui_running FORCED to 1\n");
-    printbs(buf, GFX_GREEN);
+    printbs(buf, green);
     gui_needs_redraw = 1;
     mouse_cursor_needs_redraw = 1;
     gui_create_button("Start", 10, 5, 80, BUTTON_HEIGHT, on_start_button_click);
@@ -860,7 +860,7 @@ void gui_init() {
         gui_initialized = 1;
     char debug_buf[64];
     str_copy(debug_buf, "GUI: Before mouse setup\n");
-    printbs(debug_buf, GFX_YELLOW);
+    printbs(debug_buf, yellow);
     mouse_set_callback(gui_mouse_event_handler);
     usb_mouse_set_callback(gui_mouse_event_handler);
     extern int usb_keyboard_init(void);
@@ -868,16 +868,16 @@ void gui_init() {
     usb_keyboard_init();
     usb_keyboard_set_callback(gui_handle_key);
     str_copy(debug_buf, "GUI: Before mouse position\n");
-    printbs(debug_buf, GFX_YELLOW);
+    printbs(debug_buf, yellow);
     int center_x = fb_w / 2;
     int center_y = fb_h / 2;
     gui_state.cursor_x = center_x;
     gui_state.cursor_y = center_y;
     str_copy(debug_buf, "GUI: Before timer register\n");
-    printbs(debug_buf, GFX_YELLOW);
+    printbs(debug_buf, yellow);
     timer_register_callback(gui_timer_callback);
     str_copy(debug_buf, "GUI: Init completed successfully\n");
-    printbs(debug_buf, GFX_GREEN);
+    printbs(debug_buf, green);
 }
 void gui_timer_callback(void) {
     if (gui_running) {
@@ -925,7 +925,7 @@ void gui_run() {
             str_copy(buf, "GUI: Frame rendered, FPS: ");
             str_append_uint(buf, 1000 / FRAME_TIME_MS);
             str_append(buf, "\n");
-            printbs(buf, GFX_GREEN);
+            printbs(buf, green);
         }
     }
     gui_needs_redraw = 0;

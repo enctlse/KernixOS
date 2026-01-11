@@ -1,0 +1,1 @@
+void ext4_register(void);

@@ -1,6 +1,6 @@
 #ifndef HEAP_H
 #define HEAP_H
-#include <types.h>
+#include <outputs/types.h>
 typedef struct heap_block {
     u32 magic;
     u64 size;

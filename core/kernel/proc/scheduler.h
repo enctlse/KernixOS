@@ -1,6 +1,6 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
-#include <types.h>
+#include <outputs/types.h>
 #define MAX_TASKS 256
 #define MAX_PRIORITY 32
 typedef enum {

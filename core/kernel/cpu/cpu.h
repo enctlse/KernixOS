@@ -1,6 +1,6 @@
 #ifndef CPU_H
 #define CPU_H
-#include <types.h>
+#include <outputs/types.h>
 #define CPU_FEATURE_FPU     (1 << 0)
 #define CPU_FEATURE_VME     (1 << 1)
 #define CPU_FEATURE_DE      (1 << 2)

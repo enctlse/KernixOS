@@ -1,6 +1,6 @@
 include common.mk
 
-SRCS = $(shell find $(SRC_DIR) shared -name "*.c" -or -name "*.cpp" -or -name "*.asm")
+SRCS = $(shell find $(SRC_DIR) common -name "*.c" -or -name "*.cpp" -or -name "*.asm")
 OBJS = $(SRCS:%=$(BUILD_DIR)/%.o)
 
 .PHONY: all run clean assets
@@ -52,6 +52,7 @@ run: $(ISO)
 		-drive if=pflash,format=raw,readonly=on,file=uefi/OVMF_CODE.fd \
 		-drive if=pflash,format=raw,file=uefi/OVMF_VARS.fd \
 		-cdrom $< \
+		-hda disk.img \
 		-usb \
 		-device usb-tablet \
 		-display sdl \

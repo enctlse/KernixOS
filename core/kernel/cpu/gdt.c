@@ -1,9 +1,9 @@
 #include "gdt.h"
-#include <memory/main.h>
+#include <drivers/memory/mem.h>
 #include <string/string.h>
-#include <theme/stdclrs.h>
+#include <ui/theme/colors.h>
 #include <kernel/graph/theme.h>
-#include <theme/tmx.h>
+#include <config/boot.h>
 static gdt_entry_t gdt[GDT_ENTRIES];
 static tss_t tss;
 static gdt_ptr_t gdt_ptr;
@@ -35,8 +35,8 @@ static void tss_set_entry(void)
 }
 void gdt_init(void)
 {
-    BOOTUP_PRINT("[GDT] ", GFX_GRAY_70);
-    BOOTUP_PRINT("init (Global Descriptor Table)\n", white());
+    BOOTUP_PRINT("[GDT] ", gray_70);
+    BOOTUP_PRINT("init (Global Descriptor Table)\n", theme_white());
     gdt_ptr.limit = sizeof(gdt) - 1;
     gdt_ptr.base = (u64)&gdt;
     gdt_set_gate(0, 0, 0, 0, 0);

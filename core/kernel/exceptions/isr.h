@@ -1,7 +1,7 @@
 #ifndef ISR_H
 #define ISR_H
 #include <kernel/cpu/idt.h>
-#include <types.h>
+#include <outputs/types.h>
 #define ISR_DIVISION_ERROR          0
 #define ISR_DEBUG                   1
 #define ISR_NMI                     2

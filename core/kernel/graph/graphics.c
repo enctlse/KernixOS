@@ -1,12 +1,12 @@
 #include "graphics.h"
 #include <ui/fonts/font_8x16.h>
 #include <kernel/communication/serial.h>
-#include <kernel/mem/klime/klime.h>
-#include <memory/main.h>
+#include <kernel/mem/kernel_memory/kernel_memory.h>
+#include <drivers/memory/mem.h>
 u32 *framebuffer = NULL;
 u32 *backbuffer = NULL;
 static int double_buffering_enabled = 0;
-static klime_t *graphics_klime = NULL;
+static kernel_memory_t *graphics_kernel_memory = NULL;
 u32 fb_width = 0;
 u32 fb_height = 0;
 u32 fb_pitch = 0;
@@ -22,13 +22,13 @@ static inline u32 get_stride(void) {
 static inline u32* get_active_buffer(void) {
     return double_buffering_enabled ? backbuffer : framebuffer;
 }
-void graphics_init(struct limine_framebuffer *fb, void *klime_ptr)
+void graphics_init(struct limine_framebuffer *fb, void *kernel_memory_ptr)
 {
     framebuffer = (u32 *)fb->address;
     fb_width = fb->width;
     fb_height = fb->height;
     fb_pitch = fb->pitch;
-    graphics_klime = (klime_t*)klime_ptr;
+    graphics_kernel_memory = (kernel_memory_t*)kernel_memory_ptr;
     cursor_x = 0;
     cursor_y = 0;
     font_scale = 1;
@@ -97,9 +97,9 @@ void scroll_up(u32 lines)
 void graphics_enable_double_buffering(void)
 {
     if (double_buffering_enabled) return;
-    if (!graphics_klime || fb_width == 0 || fb_height == 0) return;
+    if (!graphics_kernel_memory || fb_width == 0 || fb_height == 0) return;
     u64 size_needed = (u64)fb_height * fb_pitch;
-    backbuffer = (u32*)klime_alloc(graphics_klime, size_needed, 1);
+    backbuffer = (u32*)kernel_memory_alloc(graphics_kernel_memory, size_needed, 1);
     if (!backbuffer) {
         serial_printf("[GFX] ERROR: Backbuffer alloc failed (need %lu bytes)\n", size_needed);
         return;

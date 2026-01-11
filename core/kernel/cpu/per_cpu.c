@@ -1,7 +1,7 @@
 #include "per_cpu.h"
 #include "smp.h"
 #include <string/string.h>
-#include <memory/main.h>
+#include <drivers/memory/mem.h>
 #include <kernel/proc/scheduler.h>
 static per_cpu_data_t per_cpu_data[MAX_CPUS];
 void per_cpu_init(void) {

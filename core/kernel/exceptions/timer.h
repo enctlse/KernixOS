@@ -1,6 +1,6 @@
 #ifndef TIMER_H
 #define TIMER_H
-#include <types.h>
+#include <outputs/types.h>
 #define TIMER_FREQUENCY 300
 #define MAX_TIMER_CALLBACKS 8
 typedef void (*timer_callback_t)(void);

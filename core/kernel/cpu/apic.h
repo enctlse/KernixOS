@@ -1,6 +1,6 @@
 #ifndef APIC_H
 #define APIC_H
-#include <types.h>
+#include <outputs/types.h>
 #define APIC_BASE_MSR 0x1B
 #define APIC_BASE_MSR_ENABLE 0x800
 #define APIC_ID 0x20

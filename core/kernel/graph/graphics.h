@@ -1,9 +1,9 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
-#include <types.h>
+#include <outputs/types.h>
 #include <limine/limine.h>
-#include <theme/tmx.h>
-#include <theme/stdclrs.h>
+#include <config/boot.h>
+#include <ui/theme/colors.h>
 #include <kernel/graph/theme.h>
 #include <string/string.h>
 extern u32 *framebuffer;
@@ -15,7 +15,7 @@ extern u32 cursor_x;
 extern u32 cursor_y;
 extern u32 font_scale;
 extern u32 font_scale;
-void graphics_init(struct limine_framebuffer *fb, void *klime_ptr);
+void graphics_init(struct limine_framebuffer *fb, void *kernel_memory_ptr);
 void putpixel(u32 x, u32 y, u32 color);
 u32 getpixel(u32 x, u32 y);
 u32 get_fb_width(void);

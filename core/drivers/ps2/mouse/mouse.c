@@ -2,9 +2,9 @@
 #include <kernel/include/ports.h>
 #include <kernel/exceptions/irq.h>
 #include <kernel/graph/graphics.h>
-#include <file_systems/vfs/vfs.h>
-#include <kernel/mem/klime/klime.h>
-#include <types.h>
+#include <fs/vfs/vfs.h>
+#include <kernel/mem/kernel_memory/kernel_memory.h>
+#include <outputs/types.h>
 #define MOUSE_PORT_DATA    0x60
 #define MOUSE_PORT_STATUS  0x64
 #define MOUSE_PORT_CMD     0x64
@@ -72,43 +72,43 @@ typedef struct {
 cursor_image_t* load_cursor_bmp(const char* path) {
     int fd = fs_open(path, O_RDONLY);
     if (fd < 0) {
-        print("Failed to open cursor file: ", GFX_RED);
-        print(path, GFX_RED);
-        print("\n", GFX_RED);
+        print("Failed to open cursor file: ", red);
+        print(path, red);
+        print("\n", red);
         return NULL;
     }
     bmp_file_header_t file_header;
     bmp_info_header_t info_header;
     ssize_t read_bytes = fs_read(fd, &file_header, sizeof(bmp_file_header_t));
     if (read_bytes != sizeof(bmp_file_header_t) || file_header.type != 0x4D42) {
-        print("Invalid BMP file header\n", GFX_RED);
+        print("Invalid BMP file header\n", red);
         fs_close(fd);
         return NULL;
     }
     read_bytes = fs_read(fd, &info_header, sizeof(bmp_info_header_t));
     if (read_bytes != sizeof(bmp_info_header_t)) {
-        print("Failed to read BMP info header\n", GFX_RED);
+        print("Failed to read BMP info header\n", red);
         fs_close(fd);
         return NULL;
     }
     if (info_header.width != 16 || info_header.height != 16 || info_header.bpp != 32) {
-        print("Unsupported BMP format. Need 16x16 32-bit RGBA\n", GFX_RED);
+        print("Unsupported BMP format. Need 16x16 32-bit RGBA\n", red);
         fs_close(fd);
         return NULL;
     }
-    extern void* fs_klime;
-    cursor_image_t* cursor = (cursor_image_t*)klime_alloc((klime_t*)fs_klime, sizeof(cursor_image_t), 1);
+    extern void* fs_kernel_memory;
+    cursor_image_t* cursor = (cursor_image_t*)kernel_memory_alloc((kernel_memory_t*)fs_kernel_memory, sizeof(cursor_image_t), 1);
     if (!cursor) {
-        print("Failed to allocate cursor image\n", GFX_RED);
+        print("Failed to allocate cursor image\n", red);
         fs_close(fd);
         return NULL;
     }
     cursor->width = 16;
     cursor->height = 16;
-    cursor->pixels = (uint32_t*)klime_alloc((klime_t*)fs_klime, sizeof(uint32_t), 16 * 16);
+    cursor->pixels = (uint32_t*)kernel_memory_alloc((kernel_memory_t*)fs_kernel_memory, sizeof(uint32_t), 16 * 16);
     if (!cursor->pixels) {
-        print("Failed to allocate cursor pixels\n", GFX_RED);
-        klime_free((klime_t*)fs_klime, (u64*)cursor);
+        print("Failed to allocate cursor pixels\n", red);
+        kernel_memory_free((kernel_memory_t*)fs_kernel_memory, (u64*)cursor);
         fs_close(fd);
         return NULL;
     }
@@ -127,9 +127,9 @@ cursor_image_t* load_cursor_bmp(const char* path) {
     read_bytes = fs_read(fd, bmp_pixels, 16 * 16 * 4);
     fs_close(fd);
     if (read_bytes != 16 * 16 * 4) {
-        print("Failed to read BMP pixel data\n", GFX_RED);
-        klime_free((klime_t*)fs_klime, (u64*)cursor->pixels);
-        klime_free((klime_t*)fs_klime, (u64*)cursor);
+        print("Failed to read BMP pixel data\n", red);
+        kernel_memory_free((kernel_memory_t*)fs_kernel_memory, (u64*)cursor->pixels);
+        kernel_memory_free((kernel_memory_t*)fs_kernel_memory, (u64*)cursor);
         return NULL;
     }
     for (int y = 0; y < 16; y++) {
@@ -142,9 +142,9 @@ cursor_image_t* load_cursor_bmp(const char* path) {
             cursor->pixels[y * 16 + x] = (a << 24) | (r << 16) | (g << 8) | b;
         }
     }
-    print("Loaded BMP cursor: ", GFX_GREEN);
-    print(path, GFX_GREEN);
-    print("\n", GFX_GREEN);
+    print("Loaded BMP cursor: ", green);
+    print(path, green);
+    print("\n", green);
     return cursor;
 }
 cursor_image_t* load_cursor_from_file(const char* path) {
@@ -152,11 +152,11 @@ cursor_image_t* load_cursor_from_file(const char* path) {
     cursor_image_t* cursor = load_cursor_bmp(path);
     if (cursor) {
         if (mouse_cursor_image && mouse_cursor_image != &embedded_cursor) {
-            extern void* fs_klime;
+            extern void* fs_kernel_memory;
             if (mouse_cursor_image->pixels) {
-                klime_free((klime_t*)fs_klime, (u64*)mouse_cursor_image->pixels);
+                kernel_memory_free((kernel_memory_t*)fs_kernel_memory, (u64*)mouse_cursor_image->pixels);
             }
-            klime_free((klime_t*)fs_klime, (u64*)mouse_cursor_image);
+            kernel_memory_free((kernel_memory_t*)fs_kernel_memory, (u64*)mouse_cursor_image);
         }
         mouse_cursor_image = cursor;
         return cursor;
@@ -164,7 +164,7 @@ cursor_image_t* load_cursor_from_file(const char* path) {
     return NULL;
 }
 static cursor_image_t* load_embedded_cursor() {
-    print("Loading embedded cursor image\n", GFX_CYAN);
+    print("Loading embedded cursor image\n", cyan);
     return &embedded_cursor;
 }
 static mouse_callback_t mouse_callback = NULL;
@@ -249,7 +249,7 @@ static void mouse_interrupt_handler(cpu_state_t* state __attribute__((unused))) 
 }
 int mouse_init() {
     if (mouse_initialized) return 0;
-    print("PS/2: Initializing Mouse...\n", GFX_CYAN);
+    print("PS/2: Initializing Mouse...\n", cyan);
     mouse_wait(1);
     outb(MOUSE_PORT_CMD, 0xA8);
     mouse_wait(1);
@@ -263,7 +263,7 @@ int mouse_init() {
     outb(MOUSE_PORT_DATA, status);
     mouse_write(0xF6);
     mouse_read();
-    print("PS/2: Setting Sample Rate to 200Hz...\n", GFX_GRAY_70);
+    print("PS/2: Setting Sample Rate to 200Hz...\n", gray_70);
     mouse_write(0xF3);
     mouse_read();
     mouse_write(200);
@@ -276,7 +276,7 @@ int mouse_init() {
     mouse_read(); 
     irq_set_mask(2, 0);
     irq_set_mask(12, 0);
-    print("Registering mouse interrupt handler...\n", GFX_CYAN);
+    print("Registering mouse interrupt handler...\n", cyan);
     irq_register_handler(12, mouse_interrupt_handler);
     if (!mouse_cursor_image) {
         mouse_cursor_image = load_embedded_cursor();
@@ -293,7 +293,7 @@ int mouse_init() {
     prev_mouse_y = mouse_y;
     cursor_bg_valid = 0;
     mouse_initialized = 1;
-    print("PS/2 mouse initialized successfully (200Hz)\n", GFX_GREEN);
+    print("PS/2 mouse initialized successfully (200Hz)\n", green);
     return 0;
 }
 void mouse_get_position(int32_t *x, int32_t *y) {
@@ -400,7 +400,7 @@ void mouse_draw_cursor() {
 }
 void mouse_force_update() {
     mouse_draw_cursor();
-    print("Mouse pos: ", GFX_CYAN);
+    print("Mouse pos: ", cyan);
     char buf[64];
     str_copy(buf, "");
     str_append_uint(buf, (uint32_t)mouse_x);
@@ -410,13 +410,13 @@ void mouse_force_update() {
     str_append_uint(buf, mouse_buttons);
     str_append(buf, " ints: ");
     str_append_uint(buf, mouse_interrupt_count);
-    print(buf, GFX_CYAN);
-    print("\n", GFX_CYAN);
+    print(buf, cyan);
+    print("\n", cyan);
 }
 void mouse_reload_cursor() {
-    print("Reloading cursor to embedded arrow...\n", GFX_CYAN);
+    print("Reloading cursor to embedded arrow...\n", cyan);
     mouse_cursor_image = load_embedded_cursor();
-    print("Cursor reloaded successfully\n", GFX_GREEN);
+    print("Cursor reloaded successfully\n", green);
 }
 int mouse_has_scroll_wheel() { return 0; }
 int8_t mouse_get_scroll_delta() { return 0; }

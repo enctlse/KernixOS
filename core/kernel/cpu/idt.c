@@ -1,11 +1,11 @@
 #include "idt.h"
 #include <kernel/exceptions/isr.h>
 #include <kernel/exceptions/irq.h>
-#include <memory/main.h>
+#include <drivers/memory/mem.h>
 #include <string/string.h>
-#include <theme/stdclrs.h>
+#include <ui/theme/colors.h>
 #include <kernel/graph/theme.h>
-#include <theme/tmx.h>
+#include <config/boot.h>
 static idt_entry_t idt[IDT_ENTRIES];
 static idt_ptr_t idt_ptr;
 extern void idt_flush(u64);
@@ -27,8 +27,8 @@ void idt_load(void)
 }
 void idt_init(void)
 {
-    BOOTUP_PRINT("[IDT] ", GFX_GRAY_70);
-    BOOTUP_PRINT("Init interrupts\n", white());
+    BOOTUP_PRINT("[IDT] ", gray_70);
+    BOOTUP_PRINT("Init interrupts\n", theme_white());
     memset(&idt, 0, sizeof(idt));
     isr_install();
     irq_install();

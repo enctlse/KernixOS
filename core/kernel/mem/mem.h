@@ -1,6 +1,6 @@
 #ifndef MEM_H
 #define MEM_H
-#include <types.h>
+#include <outputs/types.h>
 #include <limine/limine.h>
 typedef struct limine_memmap_response limine_memmap_response_t;
 typedef struct limine_hhdm_response limine_hhdm_response_t;
@@ -12,18 +12,18 @@ typedef struct limine_framebuffer limine_framebuffer_t;
 #define GRAPHICS_SIZE 1024 * 1024 * 32
 #define ULIME_START (GRAPHICS_START + GRAPHICS_SIZE)
 #define ULIME_META_SIZE (1024 * 1024 * 2)
-#define KLIME_SIZE_SLAB   (1024 * 1024 * 8)
-#define KLIME_SIZE_IO     (1024 * 1024 * 4)
-#define KLIME_SIZE_DMA    (1024 * 1024 * 2)
-#define KLIME_SIZE_NOTHEAP (PAGE_SIZE + PAGE_SIZE + KLIME_SIZE_SLAB + KLIME_SIZE_IO + KLIME_SIZE_DMA)
-#define KLIME_SIZE_HEAP HEAP_SIZE - KLIME_SIZE_NOTHEAP
-#define KLIME_OFFSET_SLAB_META PAGE_SIZE
-#define KLIME_OFFSET_SLAB_DATA KLIME_OFFSET_SLAB_META + PAGE_SIZE
-#define KLIME_OFFSET_IO        KLIME_OFFSET_SLAB_DATA + KLIME_SIZE_SLAB
-#define KLIME_OFFSET_DMA       KLIME_OFFSET_IO        + KLIME_SIZE_IO
-#define KLIME_OFFSET_HEAP      KLIME_OFFSET_DMA       + KLIME_SIZE_DMA
-#define GLIME_SIZE_META (PAGE_SIZE * 256)
-#define GLIME_HEAP_SIZE (GRAPHICS_SIZE - GLIME_SIZE_META) 
+#define KERNEL_MEMORY_SIZE_SLAB   (1024 * 1024 * 8)
+#define KERNEL_MEMORY_SIZE_IO     (1024 * 1024 * 4)
+#define KERNEL_MEMORY_SIZE_DMA    (1024 * 1024 * 2)
+#define KERNEL_MEMORY_SIZE_NOTHEAP (PAGE_SIZE + PAGE_SIZE + KERNEL_MEMORY_SIZE_SLAB + KERNEL_MEMORY_SIZE_IO + KERNEL_MEMORY_SIZE_DMA)
+#define KERNEL_MEMORY_SIZE_HEAP HEAP_SIZE - KERNEL_MEMORY_SIZE_NOTHEAP
+#define KERNEL_MEMORY_OFFSET_SLAB_META PAGE_SIZE
+#define KERNEL_MEMORY_OFFSET_SLAB_DATA KERNEL_MEMORY_OFFSET_SLAB_META + PAGE_SIZE
+#define KERNEL_MEMORY_OFFSET_IO        KERNEL_MEMORY_OFFSET_SLAB_DATA + KERNEL_MEMORY_SIZE_SLAB
+#define KERNEL_MEMORY_OFFSET_DMA       KERNEL_MEMORY_OFFSET_IO        + KERNEL_MEMORY_SIZE_IO
+#define KERNEL_MEMORY_OFFSET_HEAP      KERNEL_MEMORY_OFFSET_DMA       + KERNEL_MEMORY_SIZE_DMA
+#define GRAPHICS_SIZE_META (PAGE_SIZE * 256)
+#define GRAPHICS_HEAP_SIZE (GRAPHICS_SIZE - GRAPHICS_SIZE_META)
 #define PAGE_SIZE 4096
 #define FRAME_FREE       0x00
 #define FRAME_USED       0x01
@@ -34,12 +34,12 @@ typedef struct limine_framebuffer limine_framebuffer_t;
 #define FRAME_COW        0x20
 #define FRAME_CACHE      0x40
 #define FRAME_GUARD      0x80
-typedef struct glime_request {
+typedef struct graphics_request {
     limine_framebuffer_response_t *fbr;
     u64 virt;
     u64 size;
-} glime_request_t;
-typedef struct glime_response {
+} graphics_request_t;
+typedef struct graphics_response {
     u64 *start_framebuffer;
     u64 width;
     u64 height;
@@ -52,15 +52,15 @@ typedef struct glime_response {
     u8 green_mask_shift;
     u8 blue_mask_size;
     u8 blue_mask_shift;
-} glime_response_t;
-typedef struct klime_request {
+} graphics_response_t;
+typedef struct kernel_memory_request {
     limine_hhdm_response_t *hpr;
     u64 phys;
     u64 virt;
     u64 size;
-} klime_request_t;
-typedef struct klime_response {
+} kernel_memory_request_t;
+typedef struct kernel_memory_response {
     u64 *ptr;
     u64 size;
-} klime_response_t;
+} kernel_memory_response_t;
 #endif

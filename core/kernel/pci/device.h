@@ -1,6 +1,6 @@
 #ifndef PCI_DEVICE_H
 #define PCI_DEVICE_H
-#include <types.h>
+#include <outputs/types.h>
 typedef struct {
     u16 vendor_id;
     u16 device_id;
@@ -13,7 +13,7 @@ typedef struct {
     u8 revision;
     u8 header_type;
     u8 multifunction;
-    u32 bar0;
+    u32 bar[6];
 } pci_device_t;
 void pci_device_init(void);
 void pci_device_scan_bus(u8 bus);

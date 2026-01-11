@@ -2,7 +2,7 @@
 #include <kernel/include/ports.h>
 #include <kernel/exceptions/irq.h>
 #include <kernel/graph/graphics.h>
-#include <types.h>
+#include <outputs/types.h>
 typedef struct {
     uint32_t width;
     uint32_t height;

@@ -1,11 +1,11 @@
 #include "timer.h"
 #include "irq.h"
 #include <kernel/include/ports.h>
-#include <theme/stdclrs.h>
+#include <ui/theme/colors.h>
 #include <string/string.h>
 #include <drivers/cmos/cmos.h>
 #include <kernel/graph/theme.h>
-#include <theme/tmx.h>
+#include <config/boot.h>
 static volatile u64 timer_ticks = 0;
 static volatile int timer_initialized = 0;
 static u64 boot_timestamp = 0;
@@ -14,24 +14,16 @@ static int callback_count = 0;
 void timer_handler(cpu_state_t* state)
 {
     (void)state;
-    if (!timer_initialized) {
-        return;
-    }
+    if (!timer_initialized) return;
     timer_ticks++;
     for (int i = 0; i < callback_count; i++) {
-        if (timer_callbacks[i]) {
-            timer_callbacks[i]();
-        }
+        if (timer_callbacks[i]) timer_callbacks[i]();
     }
 }
 void timer_init(u32 frequency)
 {
-    if (frequency == 0 || frequency > 1193182) {
-        frequency = TIMER_FREQUENCY;
-    }
-    for (int i = 0; i < MAX_TIMER_CALLBACKS; i++) {
-        timer_callbacks[i] = NULL;
-    }
+    if (frequency == 0 || frequency > 1193182) frequency = TIMER_FREQUENCY;
+    for (int i = 0; i < MAX_TIMER_CALLBACKS; i++) timer_callbacks[i] = NULL;
     callback_count = 0;
     irq_register_handler(0, timer_handler);
     u32 divisor = 1193182 / frequency;
@@ -46,8 +38,9 @@ void timer_init(u32 frequency)
     timer_ticks = 0;
     timer_initialized = 1;
     __asm__ volatile("sti");
-    BOOTUP_PRINT("[TIME] ", GFX_GRAY_70);
-    BOOTUP_PRINT("Init timer (", GFX_ST_WHITE);
+    BOOTUP_PRINT("[TIMER] Initialized at ", cyan);
+    BOOTUP_PRINT_INT(frequency, yellow);
+    BOOTUP_PRINT(" Hz\n", cyan);
 }
 int timer_register_callback(timer_callback_t callback)
 {
@@ -104,36 +97,15 @@ u64 timer_get_milliseconds(void)
     }
     return timer_ticks;
 }
-void timer_set_boot_time(void) {
-    boot_timestamp = timer_ticks;
-    BOOTUP_PRINT("[TIME] ", GFX_GRAY_70);
-    BOOTUP_PRINT("started uptime now...\n", GFX_ST_WHITE);
-}
-u64 timer_get_uptime_seconds(void)
-{
-    if (!timer_initialized) {
-        return 0;
-    }
-    u64 current_ticks = timer_ticks - boot_timestamp;
-    return current_ticks / TIMER_FREQUENCY;
-}
 void timer_print_uptime(void)
 {
     u64 uptime = timer_get_uptime_seconds();
-    u64 days = uptime / 86400;
-    u64 hours = (uptime % 86400) / 3600;
+    u64 hours = uptime / 3600;
     u64 minutes = (uptime % 3600) / 60;
     u64 seconds = uptime % 60;
-    char buf[128];
-    if (days > 0) {
-        str_copy(buf, "");
-        str_append_uint(buf, (u32)days);
-        str_append(buf, " day");
-        if (days != 1) str_append(buf, "s");
-        str_append(buf, ", ");
-        BOOTUP_PRINT(buf, GFX_WHITE);
-    }
+    char buf[16];
     str_copy(buf, "");
+    if (hours < 10) str_append(buf, "0");
     str_append_uint(buf, (u32)hours);
     str_append(buf, ":");
     if (minutes < 10) str_append(buf, "0");
@@ -141,5 +113,15 @@ void timer_print_uptime(void)
     str_append(buf, ":");
     if (seconds < 10) str_append(buf, "0");
     str_append_uint(buf, (u32)seconds);
-    BOOTUP_PRINT(buf, GFX_WHITE);
+    BOOTUP_PRINT(buf, yellow);
+}
+u64 timer_get_uptime_seconds(void)
+{
+    if (!timer_initialized) return 0;
+    u64 current_ticks = timer_ticks - boot_timestamp;
+    return current_ticks / TIMER_FREQUENCY;
+}
+void timer_set_boot_time(void) {
+    boot_timestamp = timer_ticks;
+    BOOTUP_PRINT("[UPTIME] Tracking started\n", green);
 }

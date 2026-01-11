@@ -1,6 +1,6 @@
 #ifndef PCI_H
 #define PCI_H
-#include <types.h>
+#include <outputs/types.h>
 #include "device.h"
 #include "config.h"
 #include "express.h"

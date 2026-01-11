@@ -2,11 +2,11 @@
 #include "../phys/physmem.h"
 #include <limine/limine.h>
 #include <kernel/exceptions/panic.h>
-#include <memory/main.h>
+#include <drivers/memory/mem.h>
 #include <kernel/mem/paging/paging.h>
 #include <kernel/communication/serial.h>
 #include <kernel/graph/theme.h>
-#include <theme/tmx.h>
+#include <config/boot.h>
 static int heap_merge_free_blocks(heap_block_t *block) {
     if (block->magic != BLOCK_MAGIC) return 0;
     int ret = 0;

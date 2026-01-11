@@ -1,6 +1,6 @@
 #ifndef MP_H
 #define MP_H
-#include <types.h>
+#include <outputs/types.h>
 typedef struct {
     char signature[4];
     u32 configuration_table;

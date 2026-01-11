@@ -1,6 +1,6 @@
 #ifndef USB_MOUSE_H
 #define USB_MOUSE_H
-#include <types.h>
+#include <outputs/types.h>
 #define USB_MOUSE_BUTTON_LEFT   0x01
 #define USB_MOUSE_BUTTON_RIGHT  0x02
 #define USB_MOUSE_BUTTON_MIDDLE 0x04

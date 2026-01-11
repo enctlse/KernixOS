@@ -1,6 +1,6 @@
 #ifndef DRIVER_MODULE_H
 #define DRIVER_MODULE_H
-#include <types.h>
+#include <outputs/types.h>
 #define MAX_MODULES 256
 #define VERSION_NUM(major, minor, patch, build) \
     ((major << 24) | (minor << 16) | (patch << 8) | build)

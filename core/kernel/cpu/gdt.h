@@ -1,6 +1,6 @@
 #ifndef GDT_H
 #define GDT_H
-#include <types.h>
+#include <outputs/types.h>
 #define GDT_ENTRIES 7
 #define GDT_PRESENT     0x80
 #define GDT_RING0       0x00

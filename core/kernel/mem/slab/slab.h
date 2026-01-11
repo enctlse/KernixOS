@@ -1,6 +1,6 @@
 #ifndef SLAB_H
 #define SLAB_H
-#include <types.h>
+#include <outputs/types.h>
 #define PAGE_SIZE 4096
 #define SLAB_MIN_SIZE 16
 #define SLAB_MAX_SIZE 1024

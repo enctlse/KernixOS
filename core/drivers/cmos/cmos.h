@@ -1,6 +1,6 @@
 #ifndef CMOS_H
 #define CMOS_H
-#include <types.h>
+#include <outputs/types.h>
 typedef struct {
     u8 second;
     u8 minute;

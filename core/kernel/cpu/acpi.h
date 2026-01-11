@@ -1,6 +1,6 @@
 #ifndef ACPI_H
 #define ACPI_H
-#include <types.h>
+#include <outputs/types.h>
 typedef struct {
     char signature[4];
     u32 length;

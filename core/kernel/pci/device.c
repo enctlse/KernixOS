@@ -54,7 +54,9 @@ void pci_device_scan_bus(u8 bus)
             u32 header_info = pci_config_read(bus, device, function, PCI_HEADER_TYPE);
             dev->header_type = (header_info >> 16) & 0x7F;
             dev->multifunction = (header_info >> 16) & 0x80;
-            dev->bar0 = pci_config_read(bus, device, function, PCI_BAR0);
+            for(int j = 0; j < 6; j++) {
+                dev->bar[j] = pci_config_read(bus, device, function, PCI_BAR0 + j * 4);
+            }
             device_count++;
             if (function == 0 && !(dev->multifunction)) {
                 break;

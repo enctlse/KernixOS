@@ -4,28 +4,28 @@ int parse_color(const char *color_str, u32 *out_color) {
     const char *p = color_str;
     while (*p == ' ') p++;
     if (*p == 'b' && *(p+1) == 'l' && *(p+2) == 'a' && *(p+3) == 'c' && *(p+4) == 'k' && *(p+5) == '\0') {
-        *out_color = GFX_BLACK;
+        *out_color = black;
         return 1;
     } else if (*p == 'w' && *(p+1) == 'h' && *(p+2) == 'i' && *(p+3) == 't' && *(p+4) == 'e' && *(p+5) == '\0') {
-        *out_color = GFX_WHITE;
+        *out_color = white;
         return 1;
     } else if (*p == 'r' && *(p+1) == 'e' && *(p+2) == 'd' && *(p+3) == '\0') {
-        *out_color = GFX_RED;
+        *out_color = red;
         return 1;
     } else if (*p == 'g' && *(p+1) == 'r' && *(p+2) == 'e' && *(p+3) == 'e' && *(p+4) == 'n' && *(p+5) == '\0') {
-        *out_color = GFX_GREEN;
+        *out_color = green;
         return 1;
     } else if (*p == 'b' && *(p+1) == 'l' && *(p+2) == 'u' && *(p+3) == 'e' && *(p+4) == '\0') {
-        *out_color = GFX_BLUE;
+        *out_color = blue;
         return 1;
     } else if (*p == 'c' && *(p+1) == 'y' && *(p+2) == 'a' && *(p+3) == 'n' && *(p+4) == '\0') {
-        *out_color = GFX_CYAN;
+        *out_color = cyan;
         return 1;
     } else if (*p == 'y' && *(p+1) == 'e' && *(p+2) == 'l' && *(p+3) == 'l' && *(p+4) == 'o' && *(p+5) == 'w' && *(p+6) == '\0') {
-        *out_color = GFX_YELLOW;
+        *out_color = yellow;
         return 1;
     } else if (*p == 'p' && *(p+1) == 'u' && *(p+2) == 'r' && *(p+3) == 'p' && *(p+4) == 'l' && *(p+5) == 'e' && *(p+6) == '\0') {
-        *out_color = GFX_PURPLE;
+        *out_color = purple;
         return 1;
     }
     return 0;
@@ -65,7 +65,7 @@ void parse_and_execute_chained(const char *input) {
         if (commands[i][0] != '\0') {
             console_execute(commands[i]);
             if (i < cmd_count - 1) {
-                print("\n", GFX_GRAY_70);
+                print("\n", gray_70);
             }
         }
     }

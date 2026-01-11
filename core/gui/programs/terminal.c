@@ -3,7 +3,7 @@
 #include <kernel/graph/graphics.h>
 #include <drivers/ps2/mouse/mouse.h>
 #include <kernel/console/functions.h>
-#include <shared/config/user.h>
+#include <config/user.h>
 #include <kernel/console/functions.h>
 #define GUI_OUTPUT_LINES 200
 #define GUI_OUTPUT_COLS 160
@@ -43,9 +43,9 @@ extern int console_mode;
 void gui_cmd_exit(const char* args);
 void gui_generate_prompt(char* buffer, size_t size) {
     (void)size;
-    str_copy(buffer, USER_NAME);
+    str_copy(buffer, User);
     str_append(buffer, "@");
-    str_append(buffer, PC_NAME);
+    str_append(buffer, Host);
     str_append(buffer, ":");
     if (str_len(cwd) > 1 && cwd[str_len(cwd) - 1] == '/') {
         char prompt_cwd[256];
