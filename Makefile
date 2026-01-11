@@ -52,7 +52,6 @@ run: $(ISO)
 		-drive if=pflash,format=raw,readonly=on,file=uefi/OVMF_CODE.fd \
 		-drive if=pflash,format=raw,file=uefi/OVMF_VARS.fd \
 		-cdrom $< \
-		-hda disk.img \
 		-usb \
 		-device usb-tablet \
 		-display sdl \
