@@ -9,7 +9,7 @@ int init_boot_log = -1;
 #include <string/string.h>
 #include <kernel/graph/theme.h>
 #include <config/boot.h>
-#include "ext4/ext4.h"
+#include "fs/ext4/ext4.h"
 static void load_limine_module(void) {
     if (!module_request.response || module_request.response->module_count == 0) {
         BOOTUP_PRINT("[FS] ", gray_70);

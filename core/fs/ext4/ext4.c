@@ -1,4 +1,4 @@
-#include "../vfs.h"
+#include "fs/vfs/vfs.h"
 #include <kernel/mem/kernel_memory/kernel_memory.h>
 #include <string/string.h>
 #include <drivers/ata/ata.h>
