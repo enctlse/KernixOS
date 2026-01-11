@@ -1,5 +1,5 @@
 #include "paging.h"
-#include <limine/limine.h>
+#include <limine.h>
 #include "../mem.h"
 #include "../phys/physmem.h"
 #include <kernel/exceptions/panic.h>

@@ -1,6 +1,6 @@
 #include "reqs.h"
 #include <types.h>
-#include <limine/limine.h>
+#include <limine.h>
 __attribute__((used, section(".requests")))
 volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(3);
 __attribute__((used, section(".requests")))

@@ -6,6 +6,8 @@ build/
 
 # Libraries/Dependencies
 include/limine
+/limine/
+/limine-protocol/
 #!include/limine/limine.h
 
 .DS_Store
