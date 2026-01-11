@@ -1,9 +1,6 @@
-The current file system is Fat32.
+Supported file systems:
 
----------------------------
-
-Other supported file systems:
-
+ext4
 ---------------------------
 
 KernixOS - 2026.
