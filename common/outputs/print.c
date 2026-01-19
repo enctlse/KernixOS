@@ -1,7 +1,7 @@
 #include "print.h"
-#include <kernel/graph/graphics.h>
-#include <kernel/graph/fm.h>
-#include <kernel/console/functions.h>
+ #include <kernel/display/visual.h>
+#include <kernel/display/fonts/typeface.h>
+#include <kernel/shell/functions.h>
 #include <gui/programs/terminal.h>
 extern int gui_mode;
 static inline void putchar_fast(char c, u32 x, u32 y, u32 color)
@@ -120,11 +120,11 @@ void string(const char *str, u32 color)
             if (*str == '\n' || buffer_pos >= sizeof(gui_buffer) - 1) {
                 gui_buffer[buffer_pos] = '\0';
                 if (buffer_pos > 0) {
-                    gui_terminal_print(gui_buffer, gui_buffer_color);
+                    terminal_print(gui_buffer, gui_buffer_color);
                     buffer_pos = 0;
                 }
                 if (*str == '\n') {
-                    gui_terminal_print("\n", gui_buffer_color);
+                    terminal_print("\n", gui_buffer_color);
                 }
             } else {
                 gui_buffer[buffer_pos++] = *str;

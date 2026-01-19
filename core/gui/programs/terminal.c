@@ -1,43 +1,17 @@
 #include <gui/gui.h>
 #include <string/string.h>
-#include <kernel/graph/graphics.h>
+#include <kernel/display/visual.h>
 #include <drivers/ps2/mouse/mouse.h>
-#include <kernel/console/functions.h>
+#include <kernel/shell/functions.h>
 #include <config/user.h>
-#include <kernel/console/functions.h>
-#define GUI_OUTPUT_LINES 200
-#define GUI_OUTPUT_COLS 160
-#define MAX_LINE_LENGTH 512
-#define CHAR_WIDTH 8
-#define CHAR_HEIGHT 16
-#define TERM_COLOR_DEFAULT  0xFFFFFFFF
-#define TERM_COLOR_PROMPT   0xFF00FF00
-#define TERM_COLOR_ERROR    0xFFFF0000
-#define TERM_COLOR_COMMAND  0xFFFFFF00
-#define TERM_COLOR_SUCCESS  0xFF00FF00
-#define TERM_COLOR_INFO     0xFF00FFFF
+#include <kernel/shell/functions.h>
+#include <kernel/mem/kernel_memory/kernel_memory.h>
+#include <fs/vfs/vfs.h>
 typedef struct {
     void (*func)(const char*);
     const char* name;
 } system_cmd_t;
-typedef struct {
-    char input_buffer[512];
-    int input_pos;
-    char output_buffer[GUI_OUTPUT_LINES][GUI_OUTPUT_COLS];
-    u32 output_colors[GUI_OUTPUT_LINES];
-    int output_line_count;
-    int cursor_visible;
-    int show_prompt;
-    int window_width_chars;
-    int window_height_lines;
-    int scroll_offset;
-    int scrollbar_visible;
-    int scrollbar_x, scrollbar_y, scrollbar_width, scrollbar_height;
-    int scrollbar_thumb_y, scrollbar_thumb_height;
-    int scrollbar_dragging;
-    int scrollbar_drag_start_y;
-} gui_terminal_state_t;
-static gui_terminal_state_t terminal_state = {0};
+gui_terminal_state_t* current_terminal_state = NULL;
 extern char cwd[];
 extern int console_mode;
 void gui_cmd_exit(const char* args);
@@ -47,21 +21,25 @@ void gui_generate_prompt(char* buffer, size_t size) {
     str_append(buffer, "@");
     str_append(buffer, Host);
     str_append(buffer, ":");
-    if (str_len(cwd) > 1 && cwd[str_len(cwd) - 1] == '/') {
-        char prompt_cwd[256];
-        str_copy(prompt_cwd, cwd);
-        prompt_cwd[str_len(cwd) - 1] = '\0';
-        str_append(buffer, prompt_cwd);
+    if (cwd && str_len(cwd) > 0) {
+        if (str_len(cwd) > 1 && cwd[str_len(cwd) - 1] == '/') {
+            char prompt_cwd[256];
+            str_copy(prompt_cwd, cwd);
+            prompt_cwd[str_len(cwd) - 1] = '\0';
+            str_append(buffer, prompt_cwd);
+        } else {
+            str_append(buffer, cwd);
+        }
     } else {
-        str_append(buffer, cwd);
+        str_append(buffer, "/");
     }
     str_append(buffer, "$ ");
 }
-void gui_terminal_update_window_size(gui_window_t* window) {
+void gui_terminal_update_window_size(gui_terminal_state_t* state, gui_window_t* window) {
     if (window->width > 10)
-        terminal_state.window_width_chars = (window->width - 10) / CHAR_WIDTH;
+        state->window_width_chars = (window->width - 10) / CHAR_WIDTH;
     else
-        terminal_state.window_width_chars = 1;
+        state->window_width_chars = 1;
     int effective_height = window->height;
     int screen_bottom = get_fb_height();
     if (window->y + window->height > screen_bottom) {
@@ -69,58 +47,73 @@ void gui_terminal_update_window_size(gui_window_t* window) {
     }
     if (effective_height < WINDOW_TITLE_HEIGHT + 10) effective_height = WINDOW_TITLE_HEIGHT + 10;
     if (effective_height > WINDOW_TITLE_HEIGHT + 5)
-        terminal_state.window_height_lines = (effective_height - WINDOW_TITLE_HEIGHT - 10) / CHAR_HEIGHT;
+        state->window_height_lines = (effective_height - WINDOW_TITLE_HEIGHT - 10) / CHAR_HEIGHT;
     else
-        terminal_state.window_height_lines = 1;
-    terminal_state.scrollbar_visible = terminal_state.output_line_count > terminal_state.window_height_lines;
-    if (terminal_state.scrollbar_visible) {
-        terminal_state.scrollbar_width = 15;
-        terminal_state.scrollbar_height = effective_height - WINDOW_TITLE_HEIGHT - 10;
-        terminal_state.scrollbar_x = window->x + window->width - terminal_state.scrollbar_width - 5;
-        terminal_state.scrollbar_y = window->y + WINDOW_TITLE_HEIGHT + 5;
-        int total_lines = terminal_state.output_line_count;
-        int visible_lines = terminal_state.window_height_lines;
+        state->window_height_lines = 1;
+    state->scrollbar_visible = state->output_line_count > state->window_height_lines;
+    if (state->scrollbar_visible) {
+        state->scrollbar_width = 15;
+        state->scrollbar_height = effective_height - WINDOW_TITLE_HEIGHT - 10;
+        state->scrollbar_x = window->x + window->width - state->scrollbar_width - 5;
+        state->scrollbar_y = window->y + WINDOW_TITLE_HEIGHT + 5;
+        int total_lines = state->output_line_count;
+        int visible_lines = state->window_height_lines;
         if (total_lines > 0) {
-            terminal_state.scrollbar_thumb_height = (terminal_state.scrollbar_height * visible_lines) / total_lines;
-            if (terminal_state.scrollbar_thumb_height < 20) terminal_state.scrollbar_thumb_height = 20;
-            if (terminal_state.scrollbar_thumb_height > terminal_state.scrollbar_height)
-                terminal_state.scrollbar_thumb_height = terminal_state.scrollbar_height;
+            state->scrollbar_thumb_height = (state->scrollbar_height * visible_lines) / total_lines;
+            if (state->scrollbar_thumb_height < 20) state->scrollbar_thumb_height = 20;
+            if (state->scrollbar_thumb_height > state->scrollbar_height)
+                state->scrollbar_thumb_height = state->scrollbar_height;
             int scrollable_lines = total_lines - visible_lines;
             if (scrollable_lines > 0) {
-                terminal_state.scrollbar_thumb_y = terminal_state.scrollbar_y +
-                    ((terminal_state.scrollbar_height - terminal_state.scrollbar_thumb_height) *
-                      terminal_state.scroll_offset) / scrollable_lines;
+                state->scrollbar_thumb_y = state->scrollbar_y +
+                    ((state->scrollbar_height - state->scrollbar_thumb_height) *
+                      state->scroll_offset) / scrollable_lines;
             } else {
-                terminal_state.scrollbar_thumb_y = terminal_state.scrollbar_y;
+                state->scrollbar_thumb_y = state->scrollbar_y;
             }
         }
     }
 }
-void gui_terminal_add_line(const char* line, u32 color) {
+void gui_terminal_add_line(gui_terminal_state_t* state, const char* line, u32 color) {
     if (!line) return;
     int max_lines = GUI_OUTPUT_LINES;
-    if (terminal_state.output_line_count >= max_lines) {
+    if (state->output_line_count >= max_lines) {
         for (int i = 0; i < max_lines - 1; i++) {
-            str_copy(terminal_state.output_buffer[i], terminal_state.output_buffer[i+1]);
-            terminal_state.output_colors[i] = terminal_state.output_colors[i+1];
+            str_copy(state->output_buffer[i], state->output_buffer[i+1]);
+            state->output_colors[i] = state->output_colors[i+1];
         }
-        terminal_state.output_line_count = max_lines - 1;
+        state->output_line_count = max_lines - 1;
     }
     int copy_len = str_len(line);
     if (copy_len >= GUI_OUTPUT_COLS) copy_len = GUI_OUTPUT_COLS - 1;
-    str_copy(terminal_state.output_buffer[terminal_state.output_line_count], line);
-    terminal_state.output_colors[terminal_state.output_line_count] = color;
-    terminal_state.output_line_count++;
-    terminal_state.scroll_offset = 0;
+    for (int i = 0; i < copy_len; i++) {
+        state->output_buffer[state->output_line_count][i] = line[i];
+    }
+    state->output_buffer[state->output_line_count][copy_len] = '\0';
+    state->output_colors[state->output_line_count] = color;
+    state->output_line_count++;
+    state->scroll_offset = 0;
 }
-void gui_terminal_print(const char *text, u32 color) {
+void gui_terminal_print(gui_terminal_state_t* state, const char *text, u32 color) {
     if (!text) return;
     static char current_line[MAX_LINE_LENGTH];
     int current_pos = 0;
     while (*text) {
         if (*text == '\n') {
             current_line[current_pos] = '\0';
-            gui_terminal_add_line(current_line, color);
+            // Split long lines
+            int pos = 0;
+            while (pos < current_pos) {
+                int len = current_pos - pos;
+                if (len > state->window_width_chars) len = state->window_width_chars;
+                char line[MAX_LINE_LENGTH];
+                for (int i = 0; i < len; i++) {
+                    line[i] = current_line[pos + i];
+                }
+                line[len] = '\0';
+                gui_terminal_add_line(state, line, color);
+                pos += len;
+            }
             current_pos = 0;
             text++;
         } else {
@@ -129,26 +122,42 @@ void gui_terminal_print(const char *text, u32 color) {
     }
     if (current_pos > 0) {
         current_line[current_pos] = '\0';
-        gui_terminal_add_line(current_line, color);
+        // Split long lines
+        int pos = 0;
+        while (pos < current_pos) {
+            int len = current_pos - pos;
+            if (len > state->window_width_chars) len = state->window_width_chars;
+            char line[MAX_LINE_LENGTH];
+            for (int i = 0; i < len; i++) {
+                line[i] = current_line[pos + i];
+            }
+            line[len] = '\0';
+            gui_terminal_add_line(state, line, color);
+            pos += len;
+        }
     }
 }
-void gui_terminal_clear() {
-    terminal_state.output_line_count = 0;
-    terminal_state.input_pos = 0;
-    terminal_state.input_buffer[0] = '\0';
-    terminal_state.scroll_offset = 0;
-}
-void gui_terminal_init() {
-    terminal_state.input_pos = 0;
-    terminal_state.input_buffer[0] = '\0';
-    terminal_state.output_line_count = 0;
-    terminal_state.cursor_visible = 1;
-    terminal_state.show_prompt = 1;
-    terminal_state.window_width_chars = 80;
-    terminal_state.window_height_lines = 25;
-    terminal_state.scroll_offset = 0;
+void gui_terminal_clear(gui_terminal_state_t* state) {
+    state->output_line_count = 0;
+    state->scroll_offset = 0;
+    state->cursor_blink_timer = 0;
     char prompt[64];
     gui_generate_prompt(prompt, sizeof(prompt));
+    gui_terminal_add_line(state, prompt, TERM_COLOR_PROMPT);
+    state->input_pos = str_len(prompt);
+}
+void gui_terminal_init(gui_terminal_state_t* state) {
+    state->output_line_count = 0;
+    state->cursor_visible = 1;
+    state->show_prompt = 1;
+    state->window_width_chars = 80;
+    state->window_height_lines = 25;
+    state->scroll_offset = 0;
+    state->cursor_blink_timer = 0;
+    char prompt[64];
+    gui_generate_prompt(prompt, sizeof(prompt));
+    gui_terminal_add_line(state, prompt, TERM_COLOR_PROMPT);
+    state->input_pos = str_len(prompt);
 }
 static system_cmd_t system_commands[] = {
     {cmd_echo, "echo"},
@@ -210,7 +219,7 @@ system_cmd_t* gui_find_system_cmd(const char *name) {
     }
     return NULL;
 }
-void gui_execute(const char *input) {
+void gui_execute(gui_terminal_state_t* state, const char *input) {
     while (*input == ' ') input++;
     if (*input == '\0') return;
     const char *end = input;
@@ -227,10 +236,30 @@ void gui_execute(const char *input) {
     while (*args == ' ') args++;
     system_cmd_t *sys_cmd = gui_find_system_cmd(cmd_name);
     if (sys_cmd) {
+        current_terminal_state = state;
         sys_cmd->func(args);
+        current_terminal_state = NULL;
     } else {
-        gui_terminal_print(cmd_name, TERM_COLOR_ERROR);
-        gui_terminal_print(": command not found\n", TERM_COLOR_ERROR);
+        gui_terminal_print(state, cmd_name, TERM_COLOR_ERROR);
+        gui_terminal_print(state, ": command not found\n", TERM_COLOR_ERROR);
+    }
+}
+void terminal_print(const char *text, u32 color) {
+    if (current_terminal_state) {
+        gui_terminal_print(current_terminal_state, text, color);
+    } else {
+        // Direct console output without buffering
+        extern void string(const char *str, u32 color);
+        int saved_gui_mode = 0;
+        extern int gui_mode;
+        if (gui_mode) {
+            saved_gui_mode = 1;
+            gui_mode = 0;  // Temporarily disable GUI mode to avoid buffering
+        }
+        string(text, color);
+        if (saved_gui_mode) {
+            gui_mode = 1;
+        }
     }
 }
 void cmd_gui(const char* args) {
@@ -238,96 +267,100 @@ void cmd_gui(const char* args) {
     extern int gui_running;
     extern void gui_init(void);
     if (gui_running) {
-        gui_terminal_print("GUI is already running!\n", 0xFF000000);
+        terminal_print("GUI is already running!\n", TERM_COLOR_ERROR);
         return;
     }
     gui_init();
 }
-void gui_terminal_handle_key(char key) {
+void gui_terminal_handle_key(gui_terminal_state_t* state, char key) {
+    // Автоматически скроллить к prompt при наборе
+    state->scroll_offset = 0;
+    char prompt[64];
+    gui_generate_prompt(prompt, sizeof(prompt));
+    int prompt_len = str_len(prompt);
     if (key == '\b') {
-        if (terminal_state.input_pos > 0) {
-            terminal_state.input_pos--;
-            terminal_state.input_buffer[terminal_state.input_pos] = '\0';
+        if (state->input_pos > prompt_len) {
+            state->input_pos--;
+            state->output_buffer[state->output_line_count - 1][state->input_pos] = '\0';
         }
     } else if (key == '\n') {
-        terminal_state.input_buffer[terminal_state.input_pos] = '\0';
-        char prompt[64];
-        gui_generate_prompt(prompt, sizeof(prompt));
-        char full_line[1024];
-        str_copy(full_line, prompt);
-        str_append(full_line, terminal_state.input_buffer);
-        str_append(full_line, "\n");
-        gui_terminal_print(full_line, TERM_COLOR_COMMAND);
-        if (str_len(terminal_state.input_buffer) > 0) {
-            gui_execute(terminal_state.input_buffer);
+        // выполнить команду
+        char* command = state->output_buffer[state->output_line_count - 1] + prompt_len;
+        if (str_len(command) > 0) {
+            gui_execute(state, command);
         }
-        terminal_state.input_pos = 0;
-        terminal_state.input_buffer[0] = '\0';
-        terminal_state.scroll_offset = 0;
+        // добавить новый prompt
+        char new_prompt[64];
+        gui_generate_prompt(new_prompt, sizeof(new_prompt));
+        gui_terminal_add_line(state, new_prompt, TERM_COLOR_PROMPT);
+        state->input_pos = str_len(new_prompt);
+        state->scroll_offset = 0;
     } else if (key >= 32 && key <= 126) {
-        if (terminal_state.input_pos < 511) {
-            terminal_state.input_buffer[terminal_state.input_pos++] = key;
-            terminal_state.input_buffer[terminal_state.input_pos] = '\0';
-        }
+        state->output_buffer[state->output_line_count - 1][state->input_pos++] = key;
+        state->output_buffer[state->output_line_count - 1][state->input_pos] = '\0';
     }
 }
-void gui_terminal_handle_scroll(int delta) {
-    int max_scroll = terminal_state.output_line_count - terminal_state.window_height_lines;
+void gui_terminal_handle_scroll(gui_terminal_state_t* state, int delta) {
+    int max_scroll = state->output_line_count - state->window_height_lines;
     if (max_scroll < 0) max_scroll = 0;
     if (delta > 0) {
-         terminal_state.scroll_offset += 3;
-         if (terminal_state.scroll_offset > max_scroll) terminal_state.scroll_offset = max_scroll;
+          state->scroll_offset += 3;
+          if (state->scroll_offset > max_scroll) state->scroll_offset = max_scroll;
     } else {
-         terminal_state.scroll_offset -= 3;
-         if (terminal_state.scroll_offset < 0) terminal_state.scroll_offset = 0;
+          state->scroll_offset -= 3;
+          if (state->scroll_offset < 0) state->scroll_offset = 0;
     }
 }
-void gui_terminal_handle_scrollbar_click(int x, int y) {
-    if (!terminal_state.scrollbar_visible) return;
-    if (x >= terminal_state.scrollbar_x && x < terminal_state.scrollbar_x + terminal_state.scrollbar_width &&
-        y >= terminal_state.scrollbar_thumb_y && y < terminal_state.scrollbar_thumb_y + terminal_state.scrollbar_thumb_height) {
-        terminal_state.scrollbar_dragging = 1;
-        terminal_state.scrollbar_drag_start_y = y - terminal_state.scrollbar_thumb_y;
-    } else if (x >= terminal_state.scrollbar_x && x < terminal_state.scrollbar_x + terminal_state.scrollbar_width &&
-               y >= terminal_state.scrollbar_y && y < terminal_state.scrollbar_y + terminal_state.scrollbar_height) {
-        int total_lines = terminal_state.output_line_count;
-        int visible_lines = terminal_state.window_height_lines;
+void gui_terminal_handle_scrollbar_click(gui_terminal_state_t* state, int x, int y) {
+    if (!state->scrollbar_visible) return;
+    if (x >= state->scrollbar_x && x < state->scrollbar_x + state->scrollbar_width &&
+        y >= state->scrollbar_thumb_y && y < state->scrollbar_thumb_y + state->scrollbar_thumb_height) {
+        state->scrollbar_dragging = 1;
+        state->scrollbar_drag_start_y = y - state->scrollbar_thumb_y;
+    } else if (x >= state->scrollbar_x && x < state->scrollbar_x + state->scrollbar_width &&
+               y >= state->scrollbar_y && y < state->scrollbar_y + state->scrollbar_height) {
+        int total_lines = state->output_line_count;
+        int visible_lines = state->window_height_lines;
         int scrollable_lines = total_lines - visible_lines;
         if (scrollable_lines > 0) {
-            int click_pos = y - terminal_state.scrollbar_y;
-            int track_height = terminal_state.scrollbar_height;
-            terminal_state.scroll_offset = (click_pos * scrollable_lines) / track_height;
-            if (terminal_state.scroll_offset < 0) terminal_state.scroll_offset = 0;
-            if (terminal_state.scroll_offset > scrollable_lines) terminal_state.scroll_offset = scrollable_lines;
+            int click_pos = y - state->scrollbar_y;
+            int track_height = state->scrollbar_height;
+            state->scroll_offset = (click_pos * scrollable_lines) / track_height;
+            if (state->scroll_offset < 0) state->scroll_offset = 0;
+            if (state->scroll_offset > scrollable_lines) state->scroll_offset = scrollable_lines;
         }
     }
 }
-void gui_terminal_handle_scrollbar_drag(int x, int y) {
+void gui_terminal_handle_scrollbar_drag(gui_terminal_state_t* state, int x, int y) {
     (void)x;
-    if (!terminal_state.scrollbar_dragging || !terminal_state.scrollbar_visible) return;
-    int total_lines = terminal_state.output_line_count;
-    int visible_lines = terminal_state.window_height_lines;
+    if (!state->scrollbar_dragging || !state->scrollbar_visible) return;
+    int total_lines = state->output_line_count;
+    int visible_lines = state->window_height_lines;
     int scrollable_lines = total_lines - visible_lines;
     if (scrollable_lines <= 0) return;
-    int track_height = terminal_state.scrollbar_height - terminal_state.scrollbar_thumb_height;
-    int drag_pos = y - terminal_state.scrollbar_drag_start_y - terminal_state.scrollbar_y;
+    int track_height = state->scrollbar_height - state->scrollbar_thumb_height;
+    int drag_pos = y - state->scrollbar_drag_start_y - state->scrollbar_y;
     if (drag_pos < 0) drag_pos = 0;
     if (drag_pos > track_height) drag_pos = track_height;
-    terminal_state.scroll_offset = (drag_pos * scrollable_lines) / track_height;
-    if (terminal_state.scroll_offset < 0) terminal_state.scroll_offset = 0;
-    if (terminal_state.scroll_offset > scrollable_lines) terminal_state.scroll_offset = scrollable_lines;
+    state->scroll_offset = (drag_pos * scrollable_lines) / track_height;
+    if (state->scroll_offset < 0) state->scroll_offset = 0;
+    if (state->scroll_offset > scrollable_lines) state->scroll_offset = scrollable_lines;
 }
-void gui_terminal_handle_scrollbar_release() {
-    terminal_state.scrollbar_dragging = 0;
+void gui_terminal_handle_scrollbar_release(gui_terminal_state_t* state) {
+    state->scrollbar_dragging = 0;
 }
-void gui_terminal_draw(gui_window_t* window, int text_x, int text_y) {
-    gui_terminal_update_window_size(window);
+void gui_terminal_draw(gui_terminal_state_t* state, gui_window_t* window, int text_x, int text_y) {
+    gui_terminal_update_window_size(state, window);
     gui_set_needs_redraw(1);
+    state->cursor_blink_timer++;
+    if (state->cursor_blink_timer % 30 == 0) {
+        state->cursor_visible = !state->cursor_visible;
+    }
     int char_h = fm_get_char_height();
-    int visible_lines = terminal_state.window_height_lines;
+    int visible_lines = state->window_height_lines;
     int start_idx = 0;
-    if (terminal_state.output_line_count > visible_lines) {
-        start_idx = terminal_state.output_line_count - visible_lines - terminal_state.scroll_offset;
+    if (state->output_line_count > visible_lines) {
+        start_idx = state->output_line_count - visible_lines - state->scroll_offset;
         if (start_idx < 0) start_idx = 0;
     }
     int window_bottom = window->y + window->height;
@@ -338,77 +371,103 @@ void gui_terminal_draw(gui_window_t* window, int text_x, int text_y) {
     if (available_height < 0) available_height = 0;
     int actual_visible_lines = available_height / char_h;
     if (actual_visible_lines < 1) actual_visible_lines = 1;
-    if (terminal_state.scrollbar_visible && terminal_state.scrollbar_y < effective_window_bottom) {
-        int scrollbar_bottom = terminal_state.scrollbar_y + terminal_state.scrollbar_height;
+    if (state->scrollbar_visible && state->scrollbar_y < effective_window_bottom) {
+        int scrollbar_bottom = state->scrollbar_y + state->scrollbar_height;
         int visible_scrollbar_height = (scrollbar_bottom > effective_window_bottom) ?
-            effective_window_bottom - terminal_state.scrollbar_y : terminal_state.scrollbar_height;
+            effective_window_bottom - state->scrollbar_y : state->scrollbar_height;
         if (visible_scrollbar_height > 0) {
-            draw_rect(terminal_state.scrollbar_x, terminal_state.scrollbar_y,
-                      terminal_state.scrollbar_width, visible_scrollbar_height, 0xFF2C2C2C);
-            if (terminal_state.scrollbar_thumb_y < effective_window_bottom &&
-                terminal_state.scrollbar_thumb_y + terminal_state.scrollbar_thumb_height > terminal_state.scrollbar_y) {
-                int visible_thumb_y = terminal_state.scrollbar_thumb_y;
-                int visible_thumb_height = terminal_state.scrollbar_thumb_height;
-                if (visible_thumb_y < terminal_state.scrollbar_y) {
-                    visible_thumb_height -= (terminal_state.scrollbar_y - visible_thumb_y);
-                    visible_thumb_y = terminal_state.scrollbar_y;
+            draw_rect(state->scrollbar_x, state->scrollbar_y,
+                      state->scrollbar_width, visible_scrollbar_height, 0xFF2C2C2C);
+            if (state->scrollbar_thumb_y < effective_window_bottom &&
+                state->scrollbar_thumb_y + state->scrollbar_thumb_height > state->scrollbar_y) {
+                int visible_thumb_y = state->scrollbar_thumb_y;
+                int visible_thumb_height = state->scrollbar_thumb_height;
+                if (visible_thumb_y < state->scrollbar_y) {
+                    visible_thumb_height -= (state->scrollbar_y - visible_thumb_y);
+                    visible_thumb_y = state->scrollbar_y;
                 }
                 if (visible_thumb_y + visible_thumb_height > effective_window_bottom) {
                     visible_thumb_height = effective_window_bottom - visible_thumb_y;
                 }
                 if (visible_thumb_height > 0) {
-                    u32 thumb_color = terminal_state.scrollbar_dragging ? 0xFF666666 : 0xFF888888;
-                    draw_rect(terminal_state.scrollbar_x + 2, visible_thumb_y,
-                              terminal_state.scrollbar_width - 4, visible_thumb_height, thumb_color);
+                    u32 thumb_color = state->scrollbar_dragging ? 0xFF666666 : 0xFF888888;
+                    draw_rect(state->scrollbar_x + 2, visible_thumb_y,
+                              state->scrollbar_width - 4, visible_thumb_height, thumb_color);
                 }
             }
         }
     }
     int cur_y = text_y;
     int line_idx = 0;
-    int max_output_lines = actual_visible_lines - 1;
-    for (int i = start_idx; i < terminal_state.output_line_count && line_idx < max_output_lines; i++) {
-        if (cur_y + char_h > effective_window_bottom - char_h) break;
-        char* line = terminal_state.output_buffer[i];
-        u32 color = terminal_state.output_colors[i];
+    int max_output_lines = actual_visible_lines;
+    for (int i = start_idx; i < state->output_line_count && line_idx < max_output_lines; i++) {
+        if (cur_y + char_h > effective_window_bottom) break;
+        char* line = state->output_buffer[i];
+        u32 color = state->output_colors[i];
         int line_len = str_len(line);
-        int display_chars = terminal_state.scrollbar_visible ?
-            terminal_state.window_width_chars - 2 : terminal_state.window_width_chars;
-        if (line_len > display_chars) {
-            char clipped_line[display_chars + 1];
-            for (int j = 0; j < display_chars; j++) {
-                clipped_line[j] = line[j];
+        int display_chars = state->scrollbar_visible ?
+            state->window_width_chars - 2 : state->window_width_chars;
+        if (i == state->output_line_count - 1) {
+            // Для prompt линии, разделить цвет и разбить input
+            char prompt[64];
+            gui_generate_prompt(prompt, sizeof(prompt));
+            int prompt_len = str_len(prompt);
+            int input_len = line_len - prompt_len;
+            int input_pos = 0;
+            int y_offset = 0;
+            while ((y_offset == 0 || input_pos < input_len) && line_idx < max_output_lines) {
+                if (cur_y + char_h > effective_window_bottom) break;
+                int available_chars = display_chars;
+                int start_x = text_x;
+                if (y_offset == 0) {
+                    // Первая линия: prompt + input
+                    if (prompt_len > 0) {
+                        int prompt_display = (prompt_len > display_chars) ? display_chars : prompt_len;
+                        char prompt_part[prompt_display + 1];
+                        for (int j = 0; j < prompt_display; j++) {
+                            prompt_part[j] = line[j];
+                        }
+                        prompt_part[prompt_display] = '\0';
+                        gui_draw_text_line_fast(prompt_part, text_x, cur_y, TERM_COLOR_PROMPT);
+                        available_chars -= prompt_display;
+                        start_x += prompt_display * CHAR_WIDTH;
+                    }
+                }
+                // Рисовать input часть
+                int len = input_len - input_pos;
+                if (len > available_chars) len = available_chars;
+                if (len > 0) {
+                    char input_part[len + 1];
+                    for (int j = 0; j < len; j++) {
+                        input_part[j] = line[prompt_len + input_pos + j];
+                    }
+                    input_part[len] = '\0';
+                    gui_draw_text_line_fast(input_part, start_x, cur_y, TERM_COLOR_INPUT);
+                    input_pos += len;
+                }
+                cur_y += char_h;
+                line_idx++;
+                y_offset++;
             }
-            clipped_line[display_chars] = '\0';
-            gui_draw_text_line_fast(clipped_line, text_x, cur_y, color);
+          
         } else {
-            gui_draw_text_line_fast(line, text_x, cur_y, color);
-        }
-        cur_y += char_h;
-        line_idx++;
+            // Для других линий
+           int pos = 0;
+while (pos < line_len && line_idx < max_output_lines) {
+    int len = line_len - pos;
+    if (len > display_chars) len = display_chars;
+    char part[display_chars + 1];
+    for (int j = 0; j < len; j++) {
+        part[j] = line[pos + j];
     }
-    int input_y = window->y + window->height - char_h - 5;
-    if (input_y >= cur_y && input_y >= window->y + WINDOW_TITLE_HEIGHT &&
-        input_y < effective_window_bottom - 5) {
-        char prompt[64];
-        gui_generate_prompt(prompt, sizeof(prompt));
-        char full_input[1024];
-        str_copy(full_input, prompt);
-        str_append(full_input, terminal_state.input_buffer);
-        int max_display = terminal_state.scrollbar_visible ?
-            terminal_state.window_width_chars - 2 : terminal_state.window_width_chars;
-        if (str_len(full_input) > max_display) {
-            char display_text[max_display + 1];
-            for (int i = 0; i < max_display - 3; i++) {
-                display_text[i] = full_input[i];
-            }
-            str_copy(display_text + max_display - 3, "...");
-            gui_draw_text_line_fast(display_text, text_x, input_y, TERM_COLOR_PROMPT);
-        } else {
-            gui_draw_text_line_fast(prompt, text_x, input_y, TERM_COLOR_PROMPT);
-            int prompt_pixels = str_len(prompt) * CHAR_WIDTH;
-            gui_draw_text_line_fast(terminal_state.input_buffer,
-                                   text_x + prompt_pixels, input_y, TERM_COLOR_DEFAULT);
-        }
+    part[len] = '\0';
+    gui_draw_text_line_fast(part, text_x, cur_y, color);
+    cur_y += char_h;
+    line_idx++;
+    pos += len;
+    if (cur_y + char_h > effective_window_bottom) break;
+}
+
     }
+}
 }

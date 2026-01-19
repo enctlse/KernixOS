@@ -2,7 +2,7 @@
 #include <limine/limine.h>
 #include "../mem.h"
 #include "../phys/physmem.h"
-#include <kernel/exceptions/panic.h>
+#include <kernel/interrupts/panic/panic.h>
 #include <drivers/memory/mem.h>
 #include <string/string.h>
 #include <ui/theme/colors.h>
@@ -29,7 +29,7 @@ void paging_map_page(
     page_table_t* pdpt = NULL;
     if (!(kernel_pml4->entries[pml4_index] & PTE_PRESENT)) {
         u64 pdpt_phys = physmem_alloc_to(1);
-        if (!pdpt_phys) panic("Could not allocate PDPT!");
+        if (!pdpt_phys) initiate_panic("Could not allocate PDPT!");
         kernel_pml4->entries[pml4_index] = (pdpt_phys & 0x000FFFFFFFFFF000) | PTE_PRESENT | PTE_WRITABLE;
         pdpt = (page_table_t*)(pdpt_phys + hpr->offset);
         memset(pdpt, 0, PAGE_SIZE);
@@ -40,7 +40,7 @@ void paging_map_page(
     page_table_t* pd = NULL;
     if (!(pdpt->entries[pdp_index] & PTE_PRESENT)) {
         u64 pd_phys = physmem_alloc_to(1);
-        if (!pd_phys) panic("Could not allocate PD!");
+        if (!pd_phys) initiate_panic("Could not allocate PD!");
         pdpt->entries[pdp_index] = (pd_phys & 0x000FFFFFFFFFF000) | PTE_PRESENT | PTE_WRITABLE;
         pd = (page_table_t*)(pd_phys + hpr->offset);
         memset(pd, 0, PAGE_SIZE);
@@ -51,7 +51,7 @@ void paging_map_page(
     page_table_t* pt = NULL;
     if (!(pd->entries[pd_index] & PTE_PRESENT)) {
         u64 pt_phys = physmem_alloc_to(1);
-        if (!pt_phys) panic("Could not allocate PT!");
+        if (!pt_phys) initiate_panic("Could not allocate PT!");
         pd->entries[pd_index] = (pt_phys & 0x000FFFFFFFFFF000) | PTE_PRESENT | PTE_WRITABLE;
         pt = (page_table_t*)(pt_phys + hpr->offset);
         memset(pt, 0, PAGE_SIZE);
@@ -70,7 +70,7 @@ void paging_init(limine_hhdm_response_t *hpr) {
 u64 map_region_alloc(limine_hhdm_response_t *hpr, u64 virt, u64 size) {
     u64 phys_frames = size / PAGE_SIZE;
     u64 phys = physmem_alloc_to(phys_frames);
-    if  (!phys) panic("ERROR: Could not allocate physmem in lime request");
+    if  (!phys) initiate_panic("ERROR: Could not allocate physmem in lime request");
     map_region(hpr, phys, virt, size);
     return phys;
 }
@@ -101,10 +101,10 @@ int is_page_mapped(limine_hhdm_response_t *hpr, u64 virtual_addr) {
 }
 void map_user_space_region(limine_hhdm_response_t *hpr, u64 phys_start, u64 size) {
     if (ULIME_START % PAGE_SIZE != 0) {
-        panic("ULIME_START not page aligned!");
+        initiate_panic("ULIME_START not page aligned!");
     }
     if (phys_start % PAGE_SIZE != 0) {
-        panic("ULime physical start not page aligned!");
+        initiate_panic("ULime physical start not page aligned!");
     }
     u64 pages = (size + PAGE_SIZE - 1) / PAGE_SIZE;
     for (u64 i = 0; i < pages; i++) {

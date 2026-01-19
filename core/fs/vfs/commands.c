@@ -84,10 +84,10 @@ int fs_mkdir(const char *path) {
     if (!parent || !parent->ops || !parent->ops->mkdir) return -1;
     int ret = parent->ops->mkdir(parent, dname);
     if (ret == 0) {
-        BOOTUP_PRINT("     ", gray_70);
-        BOOTUP_PRINT("mkdir ", st_white);
-        BOOTUP_PRINT(path, st_cyan);
-        BOOTUP_PRINT("\n", st_white);
+        SYSTEM_PRINT("     ", gray_70);
+        SYSTEM_PRINT("mkdir ", st_white);
+        SYSTEM_PRINT(path, st_cyan);
+        SYSTEM_PRINT("\n", st_white);
     }
     return ret;
 }

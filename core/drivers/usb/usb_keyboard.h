@@ -11,4 +11,5 @@ int usb_keyboard_init(void);
 void usb_keyboard_set_callback(usb_kb_callback_t cb);
 int usb_keyboard_is_initialized(void);
 void usb_keyboard_handle_report(const usb_kb_report_t *report);
+extern int usb_kb_initialized;
 #endif

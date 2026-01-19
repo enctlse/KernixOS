@@ -1,6 +1,6 @@
 #include "serial.h"
 #include <string/string.h>
-#include <kernel/include/ports.h>
+#include <kernel/include/io.h>
 #include <stdarg.h>
 void serial_init(void) {
     outb(COM1 + 1, 0x00);

@@ -1,93 +1,99 @@
-#include "module.h"
-#include <string/string.h>
-#include <ui/theme/colors.h>
-#include <kernel/graph/theme.h>
 #include <config/boot.h>
-static driver_module *modules[MAX_MODULES];
-static int module_count = 0;
-void module_init(void) {
-    BOOTUP_PRINT("[MOD] ", gray_70);
-    BOOTUP_PRINT("init module system\n", theme_white());
-    for (int i = 0; i < MAX_MODULES; i++) {
-        modules[i] = NULL;
+#include <ui/theme/colors.h>
+#include <string/string.h>
+#include "module.h"
+
+static struct component_handler *registered_handlers[COMPONENT_LIMIT];
+static int handler_total = 0;
+
+void initialize_component_system(void) {
+    SYSTEM_PRINT("[SYS] ", gray_70);
+    SYSTEM_PRINT("component management initialized\n", theme_white);
+    for (int idx = 0; idx < COMPONENT_LIMIT; idx++) {
+        registered_handlers[idx] = NULL;
     }
-    module_count = 0;
+    handler_total = 0;
 }
-int module_register(driver_module *module) {
-    if (!module || module_count >= MAX_MODULES) {
+
+int enroll_component(struct component_handler *handler) {
+    if (!handler || handler_total >= COMPONENT_LIMIT) {
         return -1;
     }
-    for (int i = 0; i < module_count; i++) {
-        if (modules[i] == module) {
+    for (int idx = 0; idx < handler_total; idx++) {
+        if (registered_handlers[idx] == handler) {
             return -1;
         }
     }
-    if (module->init) {
-        int ret = module->init();
-        if (ret != 0) {
-            return ret;
+    if (handler->startup) {
+        int result = handler->startup();
+        if (result != 0) {
+            return result;
         }
     }
-    modules[module_count++] = module;
+    registered_handlers[handler_total++] = handler;
     return 0;
 }
-void module_unregister(const char *name) {
-    if (!name) return;
-    for (int i = 0; i < module_count; i++) {
-        if (modules[i] && modules[i]->name) {
-            const char *a = name;
-            const char *b = modules[i]->name;
-            int match = 1;
-            while (*a && *b) {
-                if (*a != *b) {
-                    match = 0;
+
+void remove_component(const char *identifier) {
+    if (!identifier) return;
+    for (int idx = 0; idx < handler_total; idx++) {
+        if (registered_handlers[idx] && registered_handlers[idx]->identifier) {
+            const char *first = identifier;
+            const char *second = registered_handlers[idx]->identifier;
+            int identical = 1;
+            while (*first && *second) {
+                if (*first != *second) {
+                    identical = 0;
                     break;
                 }
-                a++;
-                b++;
+                first++;
+                second++;
             }
-            if (match && *a == '\0' && *b == '\0') {
-                if (modules[i]->fini) {
-                    modules[i]->fini();
+            if (identical && *first == '\0' && *second == '\0') {
+                if (registered_handlers[idx]->shutdown) {
+                    registered_handlers[idx]->shutdown();
                 }
-                for (int j = i; j < module_count - 1; j++) {
-                    modules[j] = modules[j + 1];
+                for (int shift = idx; shift < handler_total - 1; shift++) {
+                    registered_handlers[shift] = registered_handlers[shift + 1];
                 }
-                modules[module_count - 1] = NULL;
-                module_count--;
+                registered_handlers[handler_total - 1] = NULL;
+                handler_total--;
                 return;
             }
         }
     }
 }
-driver_module* module_find(const char *name) {
-    if (!name) return NULL;
-    for (int i = 0; i < module_count; i++) {
-        if (modules[i] && modules[i]->name) {
-            const char *a = name;
-            const char *b = modules[i]->name;
-            int match = 1;
-            while (*a && *b) {
-                if (*a != *b) {
-                    match = 0;
+
+struct component_handler* locate_component(const char *identifier) {
+    if (!identifier) return NULL;
+    for (int idx = 0; idx < handler_total; idx++) {
+        if (registered_handlers[idx] && registered_handlers[idx]->identifier) {
+            const char *first = identifier;
+            const char *second = registered_handlers[idx]->identifier;
+            int identical = 1;
+            while (*first && *second) {
+                if (*first != *second) {
+                    identical = 0;
                     break;
                 }
-                a++;
-                b++;
+                first++;
+                second++;
             }
-            if (match && *a == '\0' && *b == '\0') {
-                return modules[i];
+            if (identical && *first == '\0' && *second == '\0') {
+                return registered_handlers[idx];
             }
         }
     }
     return NULL;
 }
-int module_get_count(void) {
-    return module_count;
+
+int count_components(void) {
+    return handler_total;
 }
-driver_module* module_get_by_index(int idx) {
-    if (idx < 0 || idx >= module_count) {
+
+struct component_handler* component_at_position(int position) {
+    if (position < 0 || position >= handler_total) {
         return NULL;
     }
-    return modules[idx];
+    return registered_handlers[position];
 }

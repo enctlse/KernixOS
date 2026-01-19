@@ -8,9 +8,9 @@ static fs_node *devfs_root = NULL;
 static int devfs_open(fs_node *node, fs_file *file) {
     (void)file;
     devfs_data *dev = (devfs_data*)node->priv;
-    if (!dev || !dev->mod) return -1;
-    if (dev->mod->open) {
-        dev->handle = dev->mod->open(node->name);
+    if (!dev || !dev->handler) return -1;
+    if (dev->handler->access) {
+        dev->handle = dev->handler->access(node->name);
         if (!dev->handle) return -1;
     }
     return 0;
@@ -23,13 +23,13 @@ static int devfs_close(fs_file *file) {
 }
 static ssize_t devfs_read(fs_file *file, void *buf, size_t cnt) {
     devfs_data *dev = (devfs_data*)file->node->priv;
-    if (!dev || !dev->mod || !dev->mod->read) return -1;
-    return dev->mod->read(dev->handle, buf, cnt);
+    if (!dev || !dev->handler || !dev->handler->retrieve) return -1;
+    return dev->handler->retrieve(dev->handle, buf, cnt);
 }
 static ssize_t devfs_write(fs_file *file, const void *buf, size_t cnt) {
     devfs_data *dev = (devfs_data*)file->node->priv;
-    if (!dev || !dev->mod || !dev->mod->write) return -1;
-    return dev->mod->write(dev->handle, buf, cnt);
+    if (!dev || !dev->handler || !dev->handler->store) return -1;
+    return dev->handler->store(dev->handle, buf, cnt);
 }
 static fs_node* devfs_lookup(fs_node *dir, const char *name) {
     if (dir->type != FS_DIR) return NULL;
@@ -70,10 +70,10 @@ static fs_type devfs = {
 void devfs_register(void) {
     fs_register(&devfs);
 }
-int devfs_register_device(driver_module *mod)
+int devfs_register_device(struct component_handler *handler)
 {
-    if (!mod || !devfs_root) return -1;
-    const char *path = mod->mount;
+    if (!handler || !devfs_root) return -1;
+    const char *path = handler->attachment_point;
     const char *name = path;
     if (str_starts_with(path, "/dev/")) {
         name = path + 5;
@@ -88,14 +88,13 @@ int devfs_register_device(driver_module *mod)
         kernel_memory_free((kernel_memory_t*)fs_kernel_memory, (u64*)node);
         return -1;
     }
-    data->mod = mod;
+    data->handler = handler;
     data->handle = NULL;
     node->priv = data;
     node->ops = &devfs_ops;
-    fs_addchild(devfs_root, node);
-    BOOTUP_PRINT("[DevFS] ", gray_70);
-    BOOTUP_PRINT("registered ", st_white);
-    BOOTUP_PRINT(name, st_cyan);
-    BOOTUP_PRINT("\n", st_white);
+    SYSTEM_PRINT("[DevFS] ", gray_70);
+    SYSTEM_PRINT("registered ", st_white);
+    SYSTEM_PRINT(name, st_cyan);
+    SYSTEM_PRINT("\n", st_white);
     return 0;
 }

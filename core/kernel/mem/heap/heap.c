@@ -1,11 +1,10 @@
 #include "heap.h"
 #include "../phys/physmem.h"
 #include <limine/limine.h>
-#include <kernel/exceptions/panic.h>
+#include <kernel/interrupts/panic/panic.h>
 #include <drivers/memory/mem.h>
 #include <kernel/mem/paging/paging.h>
 #include <kernel/communication/serial.h>
-#include <kernel/graph/theme.h>
 #include <config/boot.h>
 static int heap_merge_free_blocks(heap_block_t *block) {
     if (block->magic != BLOCK_MAGIC) return 0;
@@ -72,15 +71,15 @@ int free(u64 *ptr) {
   if (!ptr) return 0;
   heap_block_t *blk = (heap_block_t *) ((u8 *)ptr - sizeof(heap_block_t));
   if (blk->magic != BLOCK_MAGIC) {
-      BOOTUP_PRINTF("\n\nERROR: kernel invalid blk! Doube free?\n");
+      SYSTEM_PRINTF("\n\nERROR: kernel invalid blk! Doube free?\n");
       return 0;
   }
   if (!blk->used) {
-      BOOTUP_PRINTF("\n WARNING: Block already freed\n");
+      SYSTEM_PRINTF("\n WARNING: Block already freed\n");
       return 0;
   }
   if (!blk->size > (1ULL < 40)) {
-      BOOTUP_PRINTF("\n ERROR: implausible block size\n");
+      SYSTEM_PRINTF("\n ERROR: implausible block size\n");
       return 0;
   }
   blk->used = 0;

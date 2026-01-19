@@ -1,4 +1,4 @@
-#include <kernel/console/console.h>
+#include <kernel/shell/acsh.h>
 #include <drivers/ps2/mouse/mouse.h>
 FHDR(cmd_calc) {
     (void)s;

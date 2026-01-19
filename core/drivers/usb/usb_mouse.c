@@ -1,7 +1,7 @@
 #include "usb_mouse.h"
-#include <kernel/include/ports.h>
-#include <kernel/exceptions/irq.h>
-#include <kernel/graph/graphics.h>
+#include <kernel/include/io.h>
+#include <kernel/interrupts/handlers/irq.h>
+#include <kernel/display/visual.h>
 #include <outputs/types.h>
 typedef struct {
     uint32_t width;
@@ -14,7 +14,7 @@ static int32_t usb_mouse_y = 300;
 static int32_t usb_mouse_x_accum = 40000;
 static int32_t usb_mouse_y_accum = 30000;
 static uint8_t usb_mouse_buttons = 0;
-static int usb_mouse_initialized = 0;
+int usb_mouse_initialized = 0;
 static int usb_mouse_interrupt_count = 0;
 static int usb_mouse_test_mode = 0;
 static const uint32_t usb_embedded_cursor_pixels[256] = {
@@ -44,7 +44,7 @@ static int usb_mouse_test_counter = 0;
 #define USB_MOUSE_CURSOR_WIDTH  16
 #define USB_MOUSE_CURSOR_HEIGHT 16
 static usb_mouse_callback_t usb_mouse_callback = NULL;
-static void usb_mouse_interrupt_handler(uint8_t* report, int report_size) {
+void usb_mouse_interrupt_handler(uint8_t* report, int report_size) {
     usb_mouse_interrupt_count++;
     if (report_size < 4) return;
     usb_mouse_buttons = report[0] & 0x07;

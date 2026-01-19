@@ -11,6 +11,7 @@
 #define SEEK_SET 0
 #define SEEK_CUR 1
 #define SEEK_END 2
+typedef long off_t;
 #define FS_MAX_MNTS 20
 #define FS_MAX_FDS  64
 #define FS_MAX_PATH 200
@@ -77,6 +78,7 @@ int fs_open(const char *path, int flags);
 int fs_close(int fd);
 ssize_t fs_read(int fd, void *buf, size_t cnt);
 ssize_t fs_write(int fd, const void *buf, size_t cnt);
+off_t fs_lseek(int fd, off_t offset, int whence);
 int fs_mkdir(const char *path);
 extern void *fs_kernel_memory;
 typedef struct {
@@ -86,9 +88,9 @@ typedef struct {
 void tmpfs_register(void);
 #include <kernel/module/module.h>
 typedef struct {
-    driver_module *mod;
+    struct component_handler *handler;
     void *handle;
 } devfs_data;
 void devfs_register(void);
-int devfs_register_device(driver_module *mod);
+int devfs_register_device(struct component_handler *handler);
 #endif

@@ -1,13 +1,13 @@
 #include <outputs/types.h>
-#include <kernel/include/ports.h>
+#include <kernel/include/io.h>
 #include <string/string.h>
 #include "ata.h"
-#include "kernel/pci/pci.h"
-#include "kernel/pci/device.h"
+#include <drivers/pci/pci_core.h>
+#include <drivers/pci/devices.h>
 #include "drivers/partitions/partitions.h"
 #include "fs/vfs/vfs.h"
 #include <string/string.h>
-#include <kernel/console/console.h>
+#include <kernel/shell/acsh.h>
 u16 ata_primary_io = ATA_DEFAULT_PRIMARY_IO;
 u16 ata_primary_ctrl = ATA_DEFAULT_PRIMARY_CONTROL;
 u16 ata_secondary_io = ATA_DEFAULT_SECONDARY_IO;
@@ -204,13 +204,13 @@ int ata_write_sector_dma(u16 base, u8 drive, u64 lba, const void *buf) {
 
 void ata_init(void) {
     // PCI scan for ATA controllers
-    pci_device_t *dev = pci_device_find_by_class(0x01, 0x01);
+    pci_device_t *dev = bus_device_find_by_class(0x01, 0x01);
     if (dev) {
-        u32 bar0 = dev->bar[0];
-        u32 bar1 = dev->bar[1];
-        u32 bar2 = dev->bar[2];
-        u32 bar3 = dev->bar[3];
-        u32 bar4 = dev->bar[4];
+        u32 bar0 = dev->base_addresses[0];
+        u32 bar1 = dev->base_addresses[1];
+        u32 bar2 = dev->base_addresses[2];
+        u32 bar3 = dev->base_addresses[3];
+        u32 bar4 = dev->base_addresses[4];
         if ((bar0 & 1) != 0) { // I/O space
             ata_primary_io = bar0 & ~1;
             ata_primary_ctrl = bar1 & ~1;

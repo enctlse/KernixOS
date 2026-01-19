@@ -1,5 +1,5 @@
 #include "usb_keyboard.h"
-#include <kernel/console/console.h>
+#include <kernel/shell/acsh.h>
 static const char hid_to_ascii[256] = {
     [0x04] = 'a', [0x05] = 'b', [0x06] = 'c', [0x07] = 'd', [0x08] = 'e',
     [0x09] = 'f', [0x0A] = 'g', [0x0B] = 'h', [0x0C] = 'i', [0x0D] = 'j',
@@ -14,13 +14,12 @@ static const char hid_to_ascii[256] = {
     [0x37] = '.', [0x38] = '/'
 };
 static usb_kb_callback_t usb_kb_callback = NULL;
-static int usb_kb_initialized = 0;
+int usb_kb_initialized = 0;
 static uint8_t prev_keys[6] = {0};
 static uint8_t prev_modifiers = 0;
 int usb_keyboard_init(void) {
-    usb_kb_initialized = 0;
-    usb_kb_initialized = 1;
     print("USB Keyboard: Initialized\n", green);
+    usb_kb_initialized = 1;
     return 0;
 }
 void usb_keyboard_set_callback(usb_kb_callback_t cb) {

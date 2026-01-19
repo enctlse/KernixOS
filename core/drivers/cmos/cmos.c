@@ -1,6 +1,6 @@
 #include "cmos.h"
-#include <kernel/include/ports.h>
-#include <kernel/graph/graphics.h>
+#include <kernel/include/io.h>
+#include <kernel/display/visual.h>
 static u8 cmos_read_register(u8 reg) {
     outb(0x70, reg);
     return inb(0x71);

@@ -1,10 +1,9 @@
 #include "user_space.h"
 #include <kernel/communication/serial.h>
-#include <kernel/exceptions/panic.h>
+#include <kernel/interrupts/panic/panic.h>
 #include <drivers/memory/mem.h>
 #include <string/string.h>
 #include <kernel/mem/paging/paging.h>
-#include <kernel/graph/theme.h>
 #include <config/boot.h>
 user_space_t *user_space_init(limine_hhdm_response_t *hpr, kernel_memory_t *kernel_memory, graphics_manager_t *graphics_manager, u64 uphys_start) {
     if (!kernel_memory || !graphics_manager) return NULL;
@@ -100,9 +99,9 @@ void user_space_schedule(user_space_t *user_space) {
     }
 }
 void user_space_proc_list(user_space_t *user_space) {
-    BOOTUP_PRINTF("Process List:\n");
-    BOOTUP_PRINTF("PID\tState\tName\t\tEntry Point\n");
-    BOOTUP_PRINTF("---\t-----\t----\t\t-----------\n");
+    SYSTEM_PRINTF("Process List:\n");
+    SYSTEM_PRINTF("PID\tState\tName\t\tEntry Point\n");
+    SYSTEM_PRINTF("---\t-----\t----\t\t-----------\n");
     user_space_proc_t *current = user_space->ptr_proc_list;
     while (current) {
         const char *state_str = "UNKNOWN";
@@ -113,24 +112,24 @@ void user_space_proc_list(user_space_t *user_space) {
             case PROC_BLOCKED: state_str = "BLOCKED"; break;
             case PROC_ZOMBIE:  state_str = "ZOMBIE"; break;
         }
-        BOOTUP_PRINTF("%lu\t%s\t%s\t\t0x%lX\n",
+        SYSTEM_PRINTF("%lu\t%s\t%s\t\t0x%lX\n",
                current->pid, state_str, current->name, current->entry_point);
         current = current->next;
     }
 }
 int user_space_load_program(user_space_proc_t *proc, u8 *code, u64 code_size) {
     if (code_size > proc->heap_size) {
-        BOOTUP_PRINTF("Program too large for process heap\n");
+        SYSTEM_PRINTF("Program too large for process heap\n");
         return 1;
     }
     memcpy((void*)proc->heap_base, code, code_size);
     proc->entry_point = proc->heap_base;
-    BOOTUP_PRINTF("Loaded program (%lu bytes) into process %s at 0x%lX\n",
+    SYSTEM_PRINTF("Loaded program (%lu bytes) into process %s at 0x%lX\n",
                     code_size, proc->name, proc->entry_point);
     return 0;
 }
 u64 sys_exit(user_space_proc_t *proc, u64 exit_code, u64 arg2, u64 arg3) {
-    BOOTUP_PRINTF("Process %s (PID %lu) exiting with code %lu\n",
+    SYSTEM_PRINTF("Process %s (PID %lu) exiting with code %lu\n",
            proc->name, proc->pid, exit_code);
     proc->state = PROC_ZOMBIE;
     return 0;

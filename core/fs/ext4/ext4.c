@@ -3,7 +3,7 @@
 #include <string/string.h>
 #include <drivers/ata/ata.h>
 #include <drivers/partitions/partitions.h>
-#include <kernel/console/console.h>
+#include <kernel/shell/acsh.h>
 extern void *fs_kernel_memory;
 extern u16 ata_primary_io;
 

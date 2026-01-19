@@ -1,6 +1,8 @@
 #ifndef GUI_H
 #define GUI_H
 #include <outputs/types.h>
+#include "programs/terminal.h"
+#include "programs/programs.h"
 #define MAX_WINDOWS 10
 #define WINDOW_TITLE_HEIGHT 25
 #define WINDOW_BORDER_WIDTH 0
@@ -10,7 +12,7 @@
 #define TASKBAR_BUTTON_WIDTH 120
 #define TASKBAR_BUTTON_HEIGHT 25
 #define TASKBAR_BUTTON_SPACING 5
-#define BUTTON_HEIGHT 25
+#define BUTTON_HEIGHT 30
 #define BUTTON_PADDING 10
 #define WINDOW_title_color_FOCUSED 0xFF000080
 #define WINDOW_title_color_UNFOCUSED 0xFF808080
@@ -52,11 +54,17 @@ typedef struct gui_window {
     window_state_t state;
     int visible;
     int minimized_x, minimized_y;
+    int maximized_x, maximized_y, maximized_width, maximized_height;
     char content[1024];
     void (*on_close)(struct gui_window* window);
     void (*on_minimize)(struct gui_window* window);
     void (*on_maximize)(struct gui_window* window);
     int is_terminal;
+    gui_terminal_state_t* terminal_state;
+    int is_text_editor;
+    gui_text_editor_state_t* text_editor_state;
+    int is_file_manager;
+    gui_file_manager_state_t* file_manager_state;
 } gui_window_t;
 typedef struct gui_button {
     int x, y, width, height;
@@ -82,6 +90,10 @@ typedef struct {
     int drag_start_x, drag_start_y;
     int drag_offset_x, drag_offset_y;
     gui_window_t* dragged_window;
+    int resizing;
+    int resize_start_x, resize_start_y;
+    int resize_start_width, resize_start_height;
+    gui_window_t* resized_window;
 } drag_state_t;
 typedef struct {
     int active_category;
@@ -105,12 +117,10 @@ extern int gui_running;
 void gui_set_needs_redraw(int needs_redraw);
 void gui_init();
 void gui_run();
-void gui_timer_callback(void);
+void gui_timer_callback(void* data);
 void gui_handle_key(int key);
 void gui_mouse_event_handler(int32_t x, int32_t y, uint8_t buttons);
-void gui_terminal_handle_scroll(int delta);
 void gui_draw_start_menu(gui_window_t* window);
-void gui_terminal_handle_scroll(int delta);
 gui_window_t* gui_create_window(const char* title, int x, int y, int width, int height);
 void gui_destroy_window(gui_window_t* window);
 void gui_focus_window(gui_window_t* window);
@@ -132,8 +142,10 @@ void gui_draw_taskbar();
 void gui_draw_window(gui_window_t* window);
 void gui_draw_button(gui_button_t* button);
 void gui_draw_cursor();
+void gui_draw_text_fast(const char* str, int x, int y, u32 color);
+void gui_draw_text_line_fast(const char* str, u32 x, u32 y, u32 color);
 void gui_handle_mouse_click(int x, int y, int button);
-void gui_handle_mouse_move(int x, int y);
+void gui_handle_mouse_move(int x, int y, uint8_t buttons);
 void gui_handle_mouse_release(int x, int y, int button);
 int gui_is_point_in_rect(int px, int py, int rx, int ry, int rw, int rh);
 gui_window_t* gui_get_window_at_point(int x, int y);

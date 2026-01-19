@@ -2,7 +2,6 @@
 #include <drivers/memory/mem.h>
 #include <string/string.h>
 #include <kernel/mem/kernel_memory/kernel_memory.h>
-#include <kernel/graph/theme.h>
 #include <config/boot.h>
 static fs_mnt mnts[FS_MAX_MNTS];
 static fs_file *fds[FS_MAX_FDS];
@@ -43,10 +42,10 @@ fs_file* fs_get_file(int fd) {
 int fs_register(fs_type *type) {
     if (!type || type_cnt >= 8) return -1;
     types[type_cnt++] = type;
-    BOOTUP_PRINT("[FS] ", gray_70);
-    BOOTUP_PRINT("registered: ", theme_white());
-    BOOTUP_PRINT(type->name, theme_white());
-    BOOTUP_PRINT("\n", theme_white());
+    SYSTEM_PRINT("[FS] ", gray_70);
+    SYSTEM_PRINT("registered: ", theme_white);
+    SYSTEM_PRINT(type->name, theme_white);
+    SYSTEM_PRINT("\n", theme_white);
     return 0;
 }
 int fs_mount(const char *src, const char *tgt, const char *type_name) {
@@ -74,12 +73,12 @@ int fs_mount(const char *src, const char *tgt, const char *type_name) {
     int ret = type->mount(src, tgt, mnt);
     if (ret != 0) return ret;
     mnt->active = 1;
-    BOOTUP_PRINT("[FS] ", gray_70);
-    BOOTUP_PRINT("mount ", theme_white());
-    BOOTUP_PRINT(type_name, theme_white());
-    BOOTUP_PRINT(" to ", theme_white());
-    BOOTUP_PRINT(tgt, theme_white());
-    BOOTUP_PRINT("\n", theme_white());
+    SYSTEM_PRINT("[FS] ", gray_70);
+    SYSTEM_PRINT("mount ", theme_white);
+    SYSTEM_PRINT(type_name, theme_white);
+    SYSTEM_PRINT(" to ", theme_white);
+    SYSTEM_PRINT(tgt, theme_white);
+    SYSTEM_PRINT("\n", theme_white);
     return 0;
 }
 fs_node* fs_resolve(const char *path) {
@@ -132,10 +131,29 @@ int fs_addchild(fs_node *parent, fs_node *child) {
     return 0;
 }
 void fs_init(void) {
-    BOOTUP_PRINT("[FS] ", gray_70);
-    BOOTUP_PRINT("init generic VFS\n", theme_white());
+    SYSTEM_PRINT("[FS] ", gray_70);
+    SYSTEM_PRINT("init generic VFS\n", theme_white);
     for (int i = 0; i < FS_MAX_MNTS; i++) mnts[i].active = 0;
     for (int i = 0; i < FS_MAX_FDS; i++) fds[i] = NULL;
     for (int i = 0; i < 8; i++) types[i] = NULL;
     type_cnt = 0;
+}
+
+off_t fs_lseek(int fd, off_t offset, int whence) {
+    fs_file *file = fs_get_file(fd);
+    if (!file) return -1;
+    switch (whence) {
+        case SEEK_SET:
+            file->pos = offset;
+            break;
+        case SEEK_CUR:
+            file->pos += offset;
+            break;
+        case SEEK_END:
+            file->pos = file->node->size + offset;
+            break;
+        default:
+            return -1;
+    }
+    return file->pos;
 }

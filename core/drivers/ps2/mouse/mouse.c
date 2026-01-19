@@ -1,7 +1,7 @@
 #include "mouse.h"
-#include <kernel/include/ports.h>
-#include <kernel/exceptions/irq.h>
-#include <kernel/graph/graphics.h>
+#include <kernel/include/io.h>
+#include <kernel/interrupts/handlers/irq.h>
+#include <kernel/display/visual.h>
 #include <fs/vfs/vfs.h>
 #include <kernel/mem/kernel_memory/kernel_memory.h>
 #include <outputs/types.h>
@@ -190,7 +190,7 @@ static uint8_t mouse_read() {
     mouse_wait(0);
     return inb(MOUSE_PORT_DATA);
 }
-static void mouse_interrupt_handler(cpu_state_t* state __attribute__((unused))) {
+void mouse_interrupt_handler(cpu_state_t* state __attribute__((unused))) {
     mouse_interrupt_count++;
     uint8_t status = inb(MOUSE_PORT_CMD);
     if (!(status & 0x20)) return;
@@ -276,8 +276,7 @@ int mouse_init() {
     mouse_read(); 
     irq_set_mask(2, 0);
     irq_set_mask(12, 0);
-    print("Registering mouse interrupt handler...\n", cyan);
-    irq_register_handler(12, mouse_interrupt_handler);
+    // No need to register, handled in exception_handler.c
     if (!mouse_cursor_image) {
         mouse_cursor_image = load_embedded_cursor();
     }
@@ -314,6 +313,9 @@ void mouse_set_callback(mouse_callback_t callback) {
 }
 void mouse_unregister_callback() {
     mouse_callback = NULL;
+}
+void mouse_set_buttons(uint8_t buttons) {
+    mouse_buttons = buttons;
 }
 int mouse_is_initialized() {
     return mouse_initialized;
@@ -432,18 +434,18 @@ void mouse_set_sensitivity(int factor) {
 int mouse_get_sensitivity() {
     return mouse_sensitivity_factor;
 }
-static int mouse_module_init(void) {
+static int mouse_handler_startup(void) {
     return mouse_init();
 }
-static void mouse_module_fini(void) {
+static void mouse_handler_shutdown(void) {
 }
-driver_module mouse_module = (driver_module) {
-    .name = "ps2_mouse",
-    .mount = "/dev/mouse",
-    .version = VERSION_NUM(0, 1, 0, 0),
-    .init = mouse_module_init,
-    .fini = mouse_module_fini,
-    .open = NULL,
-    .read = NULL,
-    .write = NULL,
+struct component_handler mouse_handler = {
+    .identifier = "ps2_mouse",
+    .attachment_point = "/dev/mouse",
+    .build_number = BUILD_VERSION(0, 1, 0, 0),
+    .startup = mouse_handler_startup,
+    .shutdown = mouse_handler_shutdown,
+    .access = NULL,
+    .retrieve = NULL,
+    .store = NULL,
 };

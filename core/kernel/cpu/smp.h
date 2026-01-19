@@ -1,7 +1,7 @@
 #ifndef SMP_H
 #define SMP_H
 #include <outputs/types.h>
-#include <kernel/include/reqs.h>
+#include <kernel/include/defs.h>
 #define MAX_CPUS 256
 typedef struct {
     u32 apic_id;

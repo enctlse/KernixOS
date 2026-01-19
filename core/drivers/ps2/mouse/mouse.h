@@ -2,6 +2,7 @@
 #define MOUSE_H
 #include <outputs/types.h>
 #include <kernel/module/module.h>
+#include <kernel/interrupts/cpu/cpu_faults.h>
 typedef struct {
     uint32_t width;
     uint32_t height;
@@ -19,6 +20,7 @@ int8_t mouse_get_scroll_delta();
 int mouse_has_scroll_wheel();
 void mouse_set_callback(mouse_callback_t callback);
 void mouse_unregister_callback();
+void mouse_set_buttons(uint8_t buttons);
 void mouse_draw_cursor();
 int mouse_is_initialized();
 int mouse_get_interrupt_count();
@@ -30,5 +32,6 @@ void mouse_force_update();
 void mouse_reload_cursor();
 void mouse_set_sensitivity(int divider);
 int mouse_get_sensitivity();
-extern driver_module mouse_module;
+void mouse_interrupt_handler(cpu_state_t* state);
+extern struct component_handler mouse_handler;
 #endif

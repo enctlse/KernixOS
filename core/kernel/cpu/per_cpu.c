@@ -2,7 +2,7 @@
 #include "smp.h"
 #include <string/string.h>
 #include <drivers/memory/mem.h>
-#include <kernel/proc/scheduler.h>
+#include <kernel/processes/scheduler.h>
 static per_cpu_data_t per_cpu_data[MAX_CPUS];
 void per_cpu_init(void) {
     memset(per_cpu_data, 0, sizeof(per_cpu_data));
@@ -13,8 +13,8 @@ void per_cpu_init(void) {
         spinlock_init(&per_cpu_data[i].lock);
         per_cpu_data[i].current_task = NULL;
         per_cpu_data[i].idle_task = NULL;
-        for (int j = 0; j < MAX_PRIORITY; j++) {
-            task_queue_init(&per_cpu_data[i].ready_queues[j]);
+        for (int j = 0; j < MAX_PRIORITY_LEVELS; j++) {
+            initialize_task_queue(&per_cpu_data[i].ready_queues[j]);
         }
         per_cpu_data[i].task_count = 0;
     }

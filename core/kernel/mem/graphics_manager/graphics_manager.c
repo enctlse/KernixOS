@@ -1,26 +1,25 @@
 #include "graphics_manager.h"
-#include <kernel/exceptions/panic.h>
+#include <kernel/interrupts/panic/panic.h>
 #include "../heap/heap.h"
 #include <string/string.h>
 #include <drivers/memory/mem.h>
 #include <kernel/communication/serial.h>
-#include <kernel/graph/theme.h>
 #include <config/boot.h>
-#include <kernel/include/ports.h>
+#include <kernel/include/io.h>
 static int double_buffering_enabled = 0;
 graphics_manager_t *graphics_manager_init(graphics_response_t *gr, u64 *ptr, u64 size) {
     if (!gr) {
-        BOOTUP_PRINTF("ERROR: Invalid graphics_manager init graphics_manager response ptr is null");
-        panic( "ERROR: Invalid graphics_manager init graphics_manager response ptr is null");
+        SYSTEM_PRINTF("ERROR: Invalid graphics_manager init graphics_manager response ptr is null");
+        initiate_panic( "ERROR: Invalid graphics_manager init graphics_manager response ptr is null");
     }
     if (!ptr) {
-        BOOTUP_PRINTF("ERROR: Invalid graphics_manager init ptr to memory is null");
-        panic( "ERROR: Invalid graphics_manager init ptr to memory is null");
+        SYSTEM_PRINTF("ERROR: Invalid graphics_manager init ptr to memory is null");
+        initiate_panic( "ERROR: Invalid graphics_manager init ptr to memory is null");
     }
     u64 framebuffer_len = sizeof(u32) * gr->width * gr->height;
     if (size < sizeof(heap_block_t) + GRAPHICS_SIZE_META + framebuffer_len) {
-        BOOTUP_PRINTF("ERROR: Invalid graphics_manager init size lt needed");
-        panic( "ERROR: Invalid graphics_manager init size lt needed");
+        SYSTEM_PRINTF("ERROR: Invalid graphics_manager init size lt needed");
+        initiate_panic( "ERROR: Invalid graphics_manager init size lt needed");
     }
     graphics_manager_t *graphics_manager = (graphics_manager_t *)ptr;
     graphics_manager->glres.start_framebuffer = gr->start_framebuffer;
@@ -38,14 +37,14 @@ graphics_manager_t *graphics_manager_init(graphics_response_t *gr, u64 *ptr, u64
     graphics_manager->framebuffer_len = framebuffer_len;
     graphics_manager->framebuffer = (u32 *)graphics_manager_create(graphics_manager, framebuffer_len);
     if (!graphics_manager->framebuffer) {
-        BOOTUP_PRINTF("ERROR: Invalid graphics_manager init framebuffer is not initialized");
-        panic( "ERROR: Invalid graphics_manager init framebuffer is not initialized");
+        SYSTEM_PRINTF("ERROR: Invalid graphics_manager init framebuffer is not initialized");
+        initiate_panic( "ERROR: Invalid graphics_manager init framebuffer is not initialized");
     }
     u64 workspaces_total = 1;
     graphics_manager->workspaces = (gworkspace_t **) graphics_manager_alloc(graphics_manager, sizeof(gworkspace_t), workspaces_total);
     if (!graphics_manager->workspaces) {
-        BOOTUP_PRINTF("ERROR: Invalid graphics_manager init workspaces is not initialized");
-        panic( "ERROR: Invalid graphics_manager init workspaces is not initialized");
+        SYSTEM_PRINTF("ERROR: Invalid graphics_manager init workspaces is not initialized");
+        initiate_panic( "ERROR: Invalid graphics_manager init workspaces is not initialized");
     }
     graphics_manager->workspaces_len = 0;
     graphics_manager->workspaces_total = workspaces_total ;

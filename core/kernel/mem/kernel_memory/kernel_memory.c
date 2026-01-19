@@ -2,12 +2,14 @@
 #include "../heap/heap.h"
 #include "../slab/slab.h"
 #include "../paging/paging.h"
-#include <kernel/exceptions/panic.h>
+#include <kernel/interrupts/panic/panic.h>
 #include <drivers/memory/mem.h>
 #include <kernel/communication/serial.h>
+
+kernel_memory_t *global_kernel_memory = NULL;
 kernel_memory_t *kernel_memory_init(u64 *ptr, u64 size) {
     if (!ptr || size < sizeof(heap_block_t)) {
-        panic("ERROR: Invalid kernel_memory initializing");
+        initiate_panic("ERROR: Invalid kernel_memory initializing");
     }
     kernel_memory_t *kernel_memory = (kernel_memory_t *)ptr;
     kernel_memory->start_slab_meta = (u64 *)((u8 *)kernel_memory + KERNEL_MEMORY_OFFSET_SLAB_META);

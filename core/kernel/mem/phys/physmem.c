@@ -1,9 +1,8 @@
 #include "physmem.h"
 #include <limine/limine.h>
-#include <kernel/exceptions/panic.h>
+#include <kernel/interrupts/panic/panic.h>
 #include <drivers/memory/mem.h>
 #include <kernel/communication/serial.h>
-#include <kernel/graph/theme.h>
 #include <config/boot.h>
 static struct physmem_pageframe *physmem_pageframes = NULL;
 static u64 physmem_total = 0;
@@ -21,7 +20,7 @@ static inline void bitmap_clear(u64 idx) {
 }
 static void physmem_addr_mark(limine_memmap_response_t *mpr) {
     if (!physmem_pageframes) {
-        panic("PHYSMEM ADDR MARK PHYSMEM PAGEFRAMES NULL");
+        initiate_panic("PHYSMEM ADDR MARK PHYSMEM PAGEFRAMES NULL");
         return;
     }
     for (u64 i = 0; i < mpr->entry_count; i++) {
@@ -47,7 +46,7 @@ static void physmem_addr_mark(limine_memmap_response_t *mpr) {
 }
 void physmem_addr_mark_used(u64 physmem_addr, u64 count) {
     if (!physmem_pageframes) {
-        panic("PHYSMEM ADDR MARK USED PHYSMEM PAGEFRAMES NULL");
+        initiate_panic("PHYSMEM ADDR MARK USED PHYSMEM PAGEFRAMES NULL");
         return;
     }
     u64 frame_start = physmem_addr / PAGE_SIZE;
@@ -61,7 +60,7 @@ void physmem_addr_mark_used(u64 physmem_addr, u64 count) {
 }
 void physmem_addr_mark_free(u64 physmem_addr, u64 count) {
     if (!physmem_pageframes) {
-        panic("PHYSMEM ADDR MARK FREE PHYSMEM PAGEFRAMES NULL");
+        initiate_panic("PHYSMEM ADDR MARK FREE PHYSMEM PAGEFRAMES NULL");
         return;
     }
     u64 frame_start = physmem_addr / PAGE_SIZE;
@@ -78,8 +77,8 @@ void *physmem_addr_get_tracking(
     limine_hhdm_response_t *hpr,
     u64 size
 ) {
-    if (!mpr) panic("PHYSMEM ADDR GET LIMINE MEMMAP EQ NULL\n");
-    if (!hpr) panic("PHYSMEM ADDR GET LIMINE HHDM EQ NULL\n");
+    if (!mpr) initiate_panic("PHYSMEM ADDR GET LIMINE MEMMAP EQ NULL\n");
+    if (!hpr) initiate_panic("PHYSMEM ADDR GET LIMINE HHDM EQ NULL\n");
     for (u64 i = 0; i < mpr->entry_count; i++) {
         struct limine_memmap_entry *entry = mpr->entries[i];
         if (entry->type == LIMINE_MEMMAP_USABLE &&
@@ -124,7 +123,7 @@ void physmem_init(limine_memmap_response_t *mpr, limine_hhdm_response_t *hpr) {
     u64 physmem_size = physmem_total * sizeof(physmem_pageframe_t);
     bitmap_size = (physmem_total + 7) / 8;
     void *physmem_pageframe_addr = physmem_addr_get_tracking(mpr, hpr, physmem_size + bitmap_size);
-    if (!physmem_pageframe_addr) panic("No usable memory found for physmem_pageframes");
+    if (!physmem_pageframe_addr) initiate_panic("No usable memory found for physmem_pageframes");
     void *physmem_pageframes_vaddr = (void *)((u64)physmem_pageframe_addr + hpr->offset);
     physmem_pageframes = (physmem_pageframe_t *)physmem_pageframes_vaddr;
     void *bitmap_addr = (void *)((u64)physmem_pageframe_addr + physmem_size);

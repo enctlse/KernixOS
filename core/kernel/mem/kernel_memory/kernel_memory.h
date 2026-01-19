@@ -24,4 +24,5 @@ void kernel_memory_free(kernel_memory_t *kernel_memory, u64 *ptr);
 u64  kernel_memory_get_total_size(kernel_memory_t *kernel_memory);
 u64  kernel_memory_get_used_size(kernel_memory_t *kernel_memory);
 u64  kernel_memory_get_free_size(kernel_memory_t *kernel_memory);
+extern kernel_memory_t *global_kernel_memory;
 #endif

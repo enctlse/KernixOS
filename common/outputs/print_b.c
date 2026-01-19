@@ -1,8 +1,8 @@
 #include "print.h"
-#include <kernel/graph/graphics.h>
+ #include <kernel/display/visual.h>
 #include <kernel/communication/serial.h>
 #include <ui/fonts/font_8x16.h>
-#include <kernel/console/functions.h>
+#include <kernel/shell/functions.h>
 
 static void putchar_bootstrap_at(char c, u32 x, u32 y, u32 color)
 {

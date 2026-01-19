@@ -1,23 +1,28 @@
-#ifndef DRIVER_MODULE_H
-#define DRIVER_MODULE_H
+#ifndef COMPONENT_HANDLER_H
+#define COMPONENT_HANDLER_H
+
 #include <outputs/types.h>
-#define MAX_MODULES 256
-#define VERSION_NUM(major, minor, patch, build) \
-    ((major << 24) | (minor << 16) | (patch << 8) | build)
-typedef struct driver_module {
-    const char *name;
-    const char *mount;
-    u32 version;
-    int (*init)(void);
-    void (*fini)(void);
-    void *(*open)(const char *path);
-    int (*read)(void *handle, void *buf, size_t count);
-    int (*write)(void *handle, const void *buf, size_t count);
-} driver_module;
-void module_init(void);
-int module_register(driver_module *module);
-void module_unregister(const char *name);
-driver_module* module_find(const char *name);
-int module_get_count(void);
-driver_module* module_get_by_index(int idx);
+
+#define COMPONENT_LIMIT 256
+#define BUILD_VERSION(maj, min, pat, bld) \
+    (((maj) << 24) | ((min) << 16) | ((pat) << 8) | (bld))
+
+struct component_handler {
+    const char *identifier;
+    const char *attachment_point;
+    u32 build_number;
+    int (*startup)(void);
+    void (*shutdown)(void);
+    void *(*access)(const char *location);
+    int (*retrieve)(void *resource, void *destination, size_t amount);
+    int (*store)(void *resource, const void *source, size_t amount);
+};
+
+void initialize_component_system(void);
+int enroll_component(struct component_handler *handler);
+void remove_component(const char *identifier);
+struct component_handler* locate_component(const char *identifier);
+int count_components(void);
+struct component_handler* component_at_position(int position);
+
 #endif

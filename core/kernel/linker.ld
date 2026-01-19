@@ -39,6 +39,12 @@ SECTIONS
         *(.data .data.*)
     } :data
 
+    .export : {
+        __start_export = .;
+        *(.export)
+        __stop_export = .;
+    } :data
+
     .bss : {
         *(.bss .bss.*)
         *(COMMON)

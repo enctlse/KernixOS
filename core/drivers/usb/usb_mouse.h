@@ -18,4 +18,6 @@ int usb_mouse_cursor_needs_update();
 void usb_mouse_force_update();
 void usb_mouse_enable_test_mode();
 void usb_mouse_simulate_interrupt();
+void usb_mouse_interrupt_handler(uint8_t* report, int report_size);
+extern int usb_mouse_initialized;
 #endif

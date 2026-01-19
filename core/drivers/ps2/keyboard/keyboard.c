@@ -1,11 +1,11 @@
 #include "keyboard.h"
-#include <kernel/console/console.h>
+#include <kernel/shell/acsh.h>
 #include <gui/gui.h>
-#include <kernel/include/ports.h>
+#include <kernel/include/io.h>
 #include <drivers/ps2/mouse/mouse.h>
 #include <drivers/usb/usb_mouse.h>
-#include <kernel/exceptions/irq.h>
-#include <kernel/exceptions/isr.h>
+#include <kernel/interrupts/handlers/irq.h>
+#include <kernel/interrupts/handlers/isr.h>
 static const unsigned char scancode_to_ascii[128] = {
     [0x00]=0, [0x01]=0,
     [0x02]='1',[0x03]='2',[0x04]='3',[0x05]='4',[0x06]='5',
@@ -68,13 +68,13 @@ if (caps_lock && !shift_pressed && key >= 'a' && key <= 'z') {
     }
     return key;
 }
-static void keyboard_interrupt_handler(cpu_state_t* state) {
+void keyboard_interrupt_handler(cpu_state_t* state) {
     (void)state;
     static int total_irq = 0;
     total_irq++;
     unsigned char sc = inb(0x60);
     if (sc == 0) {
-        irq_ack(1);
+        outb(0x20, 0x20);
         return;
     }
     if (sc & 0x80) {
@@ -85,27 +85,27 @@ static void keyboard_interrupt_handler(cpu_state_t* state) {
         if (make_code == 0x1D) {
             ctrl_pressed = 0;
         }
-        irq_ack(1);
+        outb(0x20, 0x20);
         return;
     }
     if (sc == 0x2A || sc == 0x36) {
         shift_pressed = 1;
-        irq_ack(1);
+        outb(0x20, 0x20);
         return;
     }
     if (sc == 0x3A) {
         caps_lock = !caps_lock;
-        irq_ack(1);
+        outb(0x20, 0x20);
         return;
     }
     if (sc == 0x1D) {
         ctrl_pressed = 1;
-        irq_ack(1);
+        outb(0x20, 0x20);
         return;
     }
     if (sc == 0x9D) {
         ctrl_pressed = 0;
-        irq_ack(1);
+        outb(0x20, 0x20);
         return;
     }
 char key = 0;
@@ -120,7 +120,7 @@ if (caps_lock && !shift_pressed && key >= 'a' && key <= 'z') {
     if (ctrl_pressed) {
         if (key == 'c') {
             console_handle_key(3);
-            irq_ack(1);
+            outb(0x20, 0x20);
             return;
         }
     } else if (key) {
@@ -143,11 +143,13 @@ if (caps_lock && !shift_pressed && key >= 'a' && key <= 'z') {
             else if (sc == 0x4D) console_handle_key(0x83);
         }
     }
-    irq_ack(1);
+    outb(0x20, 0x20); // EOI for master PIC
 }
 void keyboard_init(void) {
-    irq_register_handler(1, keyboard_interrupt_handler);
-    irq_set_mask(1, 0);
+    // No need to register, handled in exception_handler.c
+    // But need to unmask IRQ 1
+    // Assuming PIC is initialized elsewhere
+    outb(0x21, inb(0x21) & ~(1 << 1)); // Unmask IRQ 1
 }
 char keyboard_get_key(void) {
     return 0; 
@@ -241,19 +243,19 @@ void keyboard_poll(void) {
         }
     }
 }
-static int keyboard_module_init(void) {
+static int keyboard_handler_startup(void) {
     keyboard_init();
     return 0;
 }
-static void keyboard_module_fini(void) {
+static void keyboard_handler_shutdown(void) {
 }
-driver_module keyboard_module = (driver_module) {
-    .name = "ps2_keyboard",
-    .mount = "/dev/keyboard",
-    .version = VERSION_NUM(0, 1, 0, 0),
-    .init = keyboard_module_init,
-    .fini = keyboard_module_fini,
-    .open = NULL,
-    .read = NULL,
-    .write = NULL,
+struct component_handler keyboard_handler = {
+    .identifier = "ps2_keyboard",
+    .attachment_point = "/dev/keyboard",
+    .build_number = BUILD_VERSION(0, 1, 0, 0),
+    .startup = keyboard_handler_startup,
+    .shutdown = keyboard_handler_shutdown,
+    .access = NULL,
+    .retrieve = NULL,
+    .store = NULL,
 };
