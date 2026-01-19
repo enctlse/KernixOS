@@ -4,13 +4,10 @@
 #include <kernel/mem/phys/physmem.h>
 #include <outputs/print.h>
 #include <string/string.h>
-
 extern void kfree(void *ptr);
 extern void *memset(void *s, int c, size_t n);
-
 static struct lkm_module loaded_lkms[MAX_LKMS];
 static int lkm_count = 0;
-
 int lkm_init(void) {
     print("[LKM] ", 0);
     print("init loadable kernel modules system\n", 0);
@@ -18,52 +15,37 @@ int lkm_init(void) {
     lkm_count = 0;
     return 0;
 }
-
 int lkm_load(const char *path) {
     if (lkm_count >= MAX_LKMS) {
         return -1;
     }
-
     void *module_base;
     size_t module_size;
     Elf32_Addr entry_point;
-
     if (elf_load_module(path, &module_base, &module_size, &entry_point) != 0) {
         return -1;
     }
-
-    // Assume init_module is at entry_point
     int (*init_func)(void) = (int (*)(void))entry_point;
-
-    // Call init
     if (init_func() != 0) {
         kfree(module_base);
         return -1;
     }
-
-    // For simplicity, create module struct (in real LKM, module defines it)
     struct lkm_module *mod = &loaded_lkms[lkm_count++];
-    mod->name = "unknown";  // Should be set by module
+    mod->name = "unknown";
     mod->module_core = module_base;
     mod->size = module_size;
     mod->init = init_func;
-    // exit would be cleanup_module
-
     return 0;
 }
-
 int lkm_unload(const char *name) {
     for (int i = 0; i < lkm_count; i++) {
         if (str_equals(loaded_lkms[i].name, name)) {
-            // Call exit if available
             if (loaded_lkms[i].exit) {
                 loaded_lkms[i].exit();
             }
-            // Free memory only for loaded modules, not builtin
             if (loaded_lkms[i].module_core) {
                 kfree(loaded_lkms[i].module_core);
             }
-            // Shift array
             for (int j = i; j < lkm_count - 1; j++) {
                 loaded_lkms[j] = loaded_lkms[j + 1];
             }
@@ -73,7 +55,6 @@ int lkm_unload(const char *name) {
     }
     return -1;
 }
-
 struct lkm_module *lkm_find(const char *name) {
     for (int i = 0; i < lkm_count; i++) {
         if (str_equals(loaded_lkms[i].name, name)) {
@@ -82,7 +63,6 @@ struct lkm_module *lkm_find(const char *name) {
     }
     return NULL;
 }
-
 int lkm_register_builtin(struct lkm_module *mod) {
     if (lkm_count >= MAX_LKMS || !mod) return -1;
     loaded_lkms[lkm_count++] = *mod;

@@ -1,10 +1,8 @@
 #include <kernel/include/io.h>
 #include <kernel/cpu/idt.h>
 #include "irq.h"
-
 static interrupt_callback handlers_array[16];
 static volatile int system_ready = 0;
-
 void interrupt_processor(cpu_state_t* context) {
     if (!system_ready) {
         return;
@@ -18,7 +16,6 @@ void interrupt_processor(cpu_state_t* context) {
     }
     outb(PRIMARY_PIC_CMD, EOI_SIGNAL);
 }
-
 static void reprogram_pic(void) {
     outb(PRIMARY_PIC_CMD, 0x11);
     io_wait();
@@ -41,14 +38,12 @@ static void reprogram_pic(void) {
     outb(SECONDARY_PIC_DATA, 0xFF);
     io_wait();
 }
-
 void irq_ack(u8 num) {
     if (num >= 8) {
         outb(SECONDARY_PIC_CMD, EOI_SIGNAL);
     }
     outb(PRIMARY_PIC_CMD, EOI_SIGNAL);
 }
-
 void irq_set_mask(u8 num, int enable) {
     u16 port_addr;
     u8 current_mask;
@@ -66,21 +61,18 @@ void irq_set_mask(u8 num, int enable) {
     outb(port_addr, current_mask);
     io_wait();
 }
-
 void irq_register_handler(u8 num, interrupt_callback routine) {
     if (num < 16) {
         handlers_array[num] = routine;
         irq_set_mask(num, 0);
     }
 }
-
 void irq_unregister_handler(u8 num) {
     if (num < 16) {
         handlers_array[num] = NULL;
         irq_set_mask(num, 1);
     }
 }
-
 void irq_install(void) {
     for (int idx = 0; idx < 16; idx++) {
         handlers_array[idx] = NULL;

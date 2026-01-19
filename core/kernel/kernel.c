@@ -33,26 +33,18 @@
 #include <drivers/usb/uhci.h>
 #include <drivers/usb/xhci.h>
 #include <kernel/shell/commands/network.h>
-
-// Global kernel memory for modules
 extern kernel_memory_t *global_kernel_memory;
-
-// Kernel memory functions for modules
 void *kmalloc(size_t size) {
     if (!global_kernel_memory) return NULL;
     return kernel_memory_alloc(global_kernel_memory, size, 1);
 }
-
 void kfree(void *ptr) {
     if (!global_kernel_memory) return;
     kernel_memory_free(global_kernel_memory, ptr);
 }
-
-// Export kernel symbols for modules
 EXPORT_SYMBOL(kmalloc);
 EXPORT_SYMBOL(kfree);
 EXPORT_SYMBOL(print);
-
 static void mouse_callback(int32_t x, int32_t y, uint8_t buttons) {
     mouse_set_position(x, y);
     mouse_set_buttons(buttons);
@@ -345,8 +337,6 @@ void _start(void)
     boot_log_info("Setting up loadable kernel module system...");
     lkm_init();
     boot_log_component("LKM System", 1, "Loadable kernel module system ready");
-
-    // Register builtin modules as LKM for unloadability
     struct lkm_module console_lkm = {
         .name = "console",
         .version = "1.0",
@@ -357,7 +347,6 @@ void _start(void)
         .size = 0
     };
     lkm_register_builtin(&console_lkm);
-
     struct lkm_module keyboard_lkm = {
         .name = "keyboard",
         .version = "1.0",
@@ -368,7 +357,6 @@ void _start(void)
         .size = 0
     };
     lkm_register_builtin(&keyboard_lkm);
-
     struct lkm_module mouse_lkm = {
         .name = "mouse",
         .version = "1.0",
@@ -380,8 +368,6 @@ void _start(void)
     };
     lkm_register_builtin(&mouse_lkm);
     boot_log_info("Loading core system components as LKM...");
-    // TODO: Load console.ko, keyboard.ko, mouse.ko from /lib/modules
-    // For now, keep static registration
     enroll_component(&console_handler);
     enroll_component(&keyboard_handler);
     enroll_component(&mouse_handler);
@@ -486,7 +472,6 @@ void _start(void)
         ohci_handle_interrupt();
         uhci_handle_interrupt();
         xhci_handle_event();
-        // Handle network packets
         uint8_t packet[2048];
         int len = network_receive_packet(packet, sizeof(packet));
         if (len > 0) {

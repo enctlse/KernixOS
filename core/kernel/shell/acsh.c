@@ -263,12 +263,12 @@ void console_handle_key(int c)
         }
         return;
     }
-    if (c == 0x84) { // Home
+    if (c == 0x84) {
         input_pos = 0;
         redraw_input_line();
         return;
     }
-    if (c == 0x85) { // End
+    if (c == 0x85) {
         input_pos = str_len(input_buffer);
         redraw_input_line();
         return;
@@ -326,7 +326,6 @@ void console_execute(const char *input)
         putchar('\n', gray_70);
         print(cmd_name, red);
         print(": command not found", red);
-        
         console_window_check_scroll();
         if (!gui_running) {
             graphics_swap_buffers();

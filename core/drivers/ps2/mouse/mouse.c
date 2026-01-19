@@ -276,7 +276,6 @@ int mouse_init() {
     mouse_read(); 
     irq_set_mask(2, 0);
     irq_set_mask(12, 0);
-    // No need to register, handled in exception_handler.c
     if (!mouse_cursor_image) {
         mouse_cursor_image = load_embedded_cursor();
     }

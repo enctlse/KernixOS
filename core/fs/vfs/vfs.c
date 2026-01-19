@@ -138,7 +138,6 @@ void fs_init(void) {
     for (int i = 0; i < 8; i++) types[i] = NULL;
     type_cnt = 0;
 }
-
 off_t fs_lseek(int fd, off_t offset, int whence) {
     fs_file *file = fs_get_file(fd);
     if (!file) return -1;

@@ -3,12 +3,10 @@
 #include <kernel/cpu/per_cpu.h>
 #include <kernel/cpu/smp.h>
 #include <limits.h>
-
 task_t task_pool[MAX_TASK_COUNT];
 u32 next_task_id = 1;
 static u32 time_slice_ticks = 10;
 static void idle_task_entry(void);
-
 void initialize_task_queue(task_queue_t* queue) {
     queue->item_count = 0;
     queue->start_index = 0;
@@ -17,14 +15,12 @@ void initialize_task_queue(task_queue_t* queue) {
         queue->task_list[i] = NULL;
     }
 }
-
 static void task_queue_push(task_queue_t* queue, task_t* task) {
     if (queue->item_count >= MAX_TASK_COUNT) return;
     queue->task_list[queue->end_index] = task;
     queue->end_index = (queue->end_index + 1) % MAX_TASK_COUNT;
     queue->item_count++;
 }
-
 static task_t* task_queue_pop(task_queue_t* queue) {
     if (queue->item_count == 0) return NULL;
     task_t* task = queue->task_list[queue->start_index];
@@ -33,7 +29,6 @@ static task_t* task_queue_pop(task_queue_t* queue) {
     queue->item_count--;
     return task;
 }
-
 static task_t* task_queue_pop_priority(task_queue_t queues[MAX_PRIORITY_LEVELS]) {
     for (int p = 0; p < MAX_PRIORITY_LEVELS; p++) {
         if (queues[p].item_count > 0) {
@@ -42,7 +37,6 @@ static task_t* task_queue_pop_priority(task_queue_t queues[MAX_PRIORITY_LEVELS])
     }
     return NULL;
 }
-
 void initialize_scheduler(void) {
     per_cpu_data_t* pcpu = per_cpu_current();
     if (!pcpu) {
@@ -58,7 +52,6 @@ void initialize_scheduler(void) {
     pcpu->current_task = pcpu->idle_task;
     pcpu->idle_task->status = TASK_STATE_RUNNING;
 }
-
 void initialize_ap_scheduler(void) {
     per_cpu_data_t* pcpu = per_cpu_current();
     if (!pcpu) {
@@ -74,7 +67,6 @@ void initialize_ap_scheduler(void) {
     pcpu->current_task = pcpu->idle_task;
     pcpu->idle_task->status = TASK_STATE_RUNNING;
 }
-
 task_t* create_new_task(const char* name, void (*entry)(void), u32 priority, u64 stack_size) {
     per_cpu_data_t* target_pcpu = NULL;
     u32 min_count = UINT32_MAX;
@@ -125,14 +117,12 @@ task_t* create_new_task(const char* name, void (*entry)(void), u32 priority, u64
     spinlock_release(&target_pcpu->lock);
     return task;
 }
-
 void yield_current_task(void) {
     per_cpu_data_t* pcpu = per_cpu_current();
     if (pcpu && pcpu->current_task) {
         perform_scheduling();
     }
 }
-
 void perform_scheduling(void) {
     per_cpu_data_t* pcpu = per_cpu_current();
     if (!pcpu) return;
@@ -162,7 +152,6 @@ void perform_scheduling(void) {
         idle_task_entry();
     }
 }
-
 void handle_scheduler_timer(void) {
     per_cpu_data_t* pcpu = per_cpu_current();
     if (!pcpu || !pcpu->current_task) return;
@@ -173,12 +162,10 @@ void handle_scheduler_timer(void) {
         perform_scheduling();
     }
 }
-
 task_t* get_current_task(void) {
     per_cpu_data_t* pcpu = per_cpu_current();
     return pcpu ? pcpu->current_task : NULL;
 }
-
 void block_current_task(void) {
     per_cpu_data_t* pcpu = per_cpu_current();
     if (pcpu && pcpu->current_task) {
@@ -186,7 +173,6 @@ void block_current_task(void) {
         perform_scheduling();
     }
 }
-
 void unblock_task(task_t* task) {
     if (!task || task->status != TASK_STATE_BLOCKED) return;
     per_cpu_data_t* target_pcpu = per_cpu_get(task->assigned_cpu);
@@ -196,7 +182,6 @@ void unblock_task(task_t* task) {
     task_queue_push(&target_pcpu->ready_queues[task->priority_level], task);
     spinlock_release(&target_pcpu->lock);
 }
-
 void terminate_task(task_t* task) {
     if (!task) return;
     task->status = TASK_STATE_TERMINATED;
@@ -208,7 +193,6 @@ void terminate_task(task_t* task) {
         perform_scheduling();
     }
 }
-
 static void idle_task_entry(void) {
     while (1) {
         __asm__ volatile("hlt");

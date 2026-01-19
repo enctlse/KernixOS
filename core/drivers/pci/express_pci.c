@@ -1,9 +1,6 @@
 #include "express_pci.h"
 #include "configuration.h"
-
 #define KEY_PCIE 0x10
-
-// describe speed first
 const char* bus_pcie_speed_description(pcie_link_speed_t thing) {
     if (thing == PCIE_LINK_SPEED_GEN1) return "2.5 gt/s gen1";
     if (thing == PCIE_LINK_SPEED_GEN2) return "5.0 gt/s gen2";
@@ -12,12 +9,9 @@ const char* bus_pcie_speed_description(pcie_link_speed_t thing) {
     if (thing == PCIE_LINK_SPEED_GEN5) return "32.0 gt/s gen5";
     return "unknown speed";
 }
-
-// get width
 u8 bus_pcie_get_width(u8 path, u8 spot, u8 role) {
     u16 state = bus_config_read_word(path, spot, role, BUS_REG_STATUS);
     if (!(state & 0x10)) return 0;
-
     u8 walker = bus_config_read_byte(path, spot, role, BUS_REG_CAP_PTR);
     do {
         if (walker == 0) return 0;
@@ -29,12 +23,9 @@ u8 bus_pcie_get_width(u8 path, u8 spot, u8 role) {
         walker = bus_config_read_byte(path, spot, role, walker + 1);
     } while (1);
 }
-
-// check device
 int bus_pcie_check_device(u8 path, u8 spot, u8 role) {
     u16 state = bus_config_read_word(path, spot, role, BUS_REG_STATUS);
     if (!(state & 0x10)) return 0;
-
     u8 walker = bus_config_read_byte(path, spot, role, BUS_REG_CAP_PTR);
     while (walker != 0) {
         u8 current = bus_config_read_byte(path, spot, role, walker);
@@ -43,12 +34,9 @@ int bus_pcie_check_device(u8 path, u8 spot, u8 role) {
     }
     return 0;
 }
-
-// get speed
 pcie_link_speed_t bus_pcie_get_speed(u8 path, u8 spot, u8 role) {
     u16 state = bus_config_read_word(path, spot, role, BUS_REG_STATUS);
     if (!(state & 0x10)) return PCIE_LINK_SPEED_UNKNOWN;
-
     u8 walker = bus_config_read_byte(path, spot, role, BUS_REG_CAP_PTR);
     for (;;) {
         if (walker == 0) return PCIE_LINK_SPEED_UNKNOWN;

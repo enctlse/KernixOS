@@ -5,7 +5,6 @@
 #include <kernel/interrupts/panic/panic.h>
 #include <drivers/memory/mem.h>
 #include <kernel/communication/serial.h>
-
 kernel_memory_t *global_kernel_memory = NULL;
 kernel_memory_t *kernel_memory_init(u64 *ptr, u64 size) {
     if (!ptr || size < sizeof(heap_block_t)) {

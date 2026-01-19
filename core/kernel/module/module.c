@@ -2,10 +2,8 @@
 #include <ui/theme/colors.h>
 #include <string/string.h>
 #include "module.h"
-
 static struct component_handler *registered_handlers[COMPONENT_LIMIT];
 static int handler_total = 0;
-
 void initialize_component_system(void) {
     SYSTEM_PRINT("[SYS] ", gray_70);
     SYSTEM_PRINT("component management initialized\n", theme_white);
@@ -14,7 +12,6 @@ void initialize_component_system(void) {
     }
     handler_total = 0;
 }
-
 int enroll_component(struct component_handler *handler) {
     if (!handler || handler_total >= COMPONENT_LIMIT) {
         return -1;
@@ -33,7 +30,6 @@ int enroll_component(struct component_handler *handler) {
     registered_handlers[handler_total++] = handler;
     return 0;
 }
-
 void remove_component(const char *identifier) {
     if (!identifier) return;
     for (int idx = 0; idx < handler_total; idx++) {
@@ -63,7 +59,6 @@ void remove_component(const char *identifier) {
         }
     }
 }
-
 struct component_handler* locate_component(const char *identifier) {
     if (!identifier) return NULL;
     for (int idx = 0; idx < handler_total; idx++) {
@@ -86,11 +81,9 @@ struct component_handler* locate_component(const char *identifier) {
     }
     return NULL;
 }
-
 int count_components(void) {
     return handler_total;
 }
-
 struct component_handler* component_at_position(int position) {
     if (position < 0 || position >= handler_total) {
         return NULL;

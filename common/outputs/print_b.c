@@ -3,7 +3,6 @@
 #include <kernel/communication/serial.h>
 #include <ui/fonts/font_8x16.h>
 #include <kernel/shell/functions.h>
-
 static void putchar_bootstrap_at(char c, u32 x, u32 y, u32 color)
 {
     const u8 *glyph = font_8x16[(u8)c];
@@ -23,7 +22,6 @@ static void putchar_bootstrap_at(char c, u32 x, u32 y, u32 color)
         }
     }
 }
-
 void putchar_bootstrap(char c, u32 color)
 {
     u32 char_width = 8 * font_scale;
@@ -44,7 +42,6 @@ void putchar_bootstrap(char c, u32 color)
     putchar_bootstrap_at(c, cursor_x, cursor_y, color);
     cursor_x += char_spacing;
 }
-
 void printbs(const char *str, u32 color)
 {
     for (size_t char_index = 0; str[char_index]; char_index++)

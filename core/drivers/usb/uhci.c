@@ -194,9 +194,8 @@ uhci_device_t* uhci_get_device(uint8_t slot_id) {
 int uhci_init(uint64_t base_addr) {
     if (!fs_kernel_memory || base_addr == 0) return -1;
     uhci_ctrl.io_base = (uint16_t)base_addr;
-    // Check if regs are accessible
     uint16_t test = uhci_read16(uhci_ctrl.io_base + UHCI_USBCMD);
-    if (test == 0xFFFF) return -1; // not mapped or no device
+    if (test == 0xFFFF) return -1;
     uhci_ctrl.td = uhci_alloc_td();
     if (!uhci_ctrl.td) return -1;
     uhci_ctrl.frame_list = (uint32_t*)kernel_memory_alloc((kernel_memory_t*)fs_kernel_memory, 1024 * 4, 1);

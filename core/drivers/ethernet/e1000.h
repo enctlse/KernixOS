@@ -1,9 +1,6 @@
 #ifndef E1000_H
 #define E1000_H
-
 #include <stdint.h>
-
-// E1000 Registers
 #define E1000_REG_CTRL        0x0000
 #define E1000_REG_STATUS      0x0008
 #define E1000_REG_EECD        0x0010
@@ -37,8 +34,6 @@
 #define E1000_REG_TIPG        0x0410
 #define E1000_REG_RAL         0x5400
 #define E1000_REG_RAH         0x5404
-
-// Receive Descriptor
 typedef struct {
     uint64_t addr;
     uint16_t length;
@@ -47,8 +42,6 @@ typedef struct {
     uint8_t errors;
     uint16_t special;
 } __attribute__((packed)) e1000_rx_desc_t;
-
-// Transmit Descriptor
 typedef struct {
     uint64_t addr;
     uint16_t length;
@@ -58,8 +51,6 @@ typedef struct {
     uint8_t css;
     uint16_t special;
 } __attribute__((packed)) e1000_tx_desc_t;
-
-// E1000 Device Structure
 typedef struct {
     uint32_t io_base;
     uint8_t mac[6];
@@ -70,10 +61,8 @@ typedef struct {
     int rx_cur;
     int tx_cur;
 } e1000_device_t;
-
 void e1000_init(uint32_t io_base);
 extern e1000_device_t e1000_dev;
 void e1000_send_packet(void* data, int len);
 int e1000_receive_packet(void* buffer, int max_len);
-
 #endif

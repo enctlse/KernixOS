@@ -1,9 +1,7 @@
 #ifndef INTERRUPT_HANDLER_H
 #define INTERRUPT_HANDLER_H
-
 #include <outputs/types.h>
 #include <kernel/cpu/idt.h>
-
 #define TIMER_VECTOR       32
 #define KEYBOARD_VECTOR    33
 #define CASCADE_VECTOR     34
@@ -20,15 +18,12 @@
 #define FPU_VECTOR         45
 #define PRIMARY_ATA_VECTOR 46
 #define SECONDARY_ATA_VECTOR 47
-
 #define PRIMARY_PIC_CMD  0x20
 #define PRIMARY_PIC_DATA 0x21
 #define SECONDARY_PIC_CMD 0xA0
 #define SECONDARY_PIC_DATA 0xA1
 #define EOI_SIGNAL       0x20
-
 typedef void (*interrupt_callback)(cpu_state_t* state);
-
 extern void hardware_interrupt_15(void);
 extern void hardware_interrupt_14(void);
 extern void hardware_interrupt_13(void);
@@ -45,11 +40,9 @@ extern void hardware_interrupt_3(void);
 extern void hardware_interrupt_2(void);
 extern void hardware_interrupt_1(void);
 extern void hardware_interrupt_0(void);
-
 void irq_ack(u8 num);
 void irq_set_mask(u8 num, int enable);
 void irq_register_handler(u8 num, interrupt_callback handler);
 void irq_unregister_handler(u8 num);
 void irq_install(void);
-
 #endif

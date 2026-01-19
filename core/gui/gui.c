@@ -64,7 +64,6 @@ static void launch_terminal_new(void) {
             win->terminal_state = &terminal_states[index];
             gui_terminal_init(win->terminal_state);
         } else {
-            // No free state, destroy window
             gui_destroy_window(win);
             return;
         }
@@ -100,7 +99,6 @@ static void launch_text_editor_new(void) {
             win->text_editor_state = &text_editor_states[index];
             gui_text_editor_init(win->text_editor_state);
         } else {
-            // No free state, destroy window
             gui_destroy_window(win);
             return;
         }
@@ -111,7 +109,6 @@ static void launch_text_editor_new(void) {
         }
     }
 }
-
 static void launch_file_manager_new(void) {
     gui_window_t* win = gui_create_window("File Manager", 200, 150, 600, 400);
     if (win) {
@@ -128,7 +125,6 @@ static void launch_file_manager_new(void) {
             win->file_manager_state = &file_manager_states[index];
             gui_file_manager_init(win->file_manager_state);
         } else {
-            // No free state, destroy window
             gui_destroy_window(win);
             return;
         }
@@ -159,7 +155,6 @@ void gui_draw_start_menu(gui_window_t* window) {
     int section_padding = 8;
     draw_rect(mx + 5, current_y, mw - 10, 4 * item_h + 2 * section_padding, MENU_SECTION_BG);
     draw_rect(mx + 5, current_y + section_padding - 2, mw - 10, 1, MENU_SEPARATOR);
-    // Removed "System" header
     current_y += section_padding;
     gui_draw_text_line_fast("Terminal", mx + 45, current_y + 8, MENU_TEXT_MAIN);
     draw_rect(mx + 10, current_y + 5, 20, 20, 0xFF2E86C1);
@@ -173,7 +168,6 @@ void gui_draw_start_menu(gui_window_t* window) {
     current_y += section_padding;
     draw_rect(mx + 5, current_y, mw - 10, item_h + 2 * section_padding, MENU_SECTION_BG);
     draw_rect(mx + 5, current_y + section_padding - 2, mw - 10, 1, MENU_SEPARATOR);
-    // Removed "Settings" header
     current_y += section_padding;
     gui_draw_text_line_fast("Settings", mx + 45, current_y + 8, MENU_TEXT_MAIN);
     draw_rect(mx + 10, current_y + 5, 20, 20, 0xFF9B59B6);
@@ -181,7 +175,6 @@ void gui_draw_start_menu(gui_window_t* window) {
     current_y += section_padding;
     draw_rect(mx + 5, current_y, mw - 10, 2 * item_h + 2 * section_padding, MENU_SECTION_BG);
     draw_rect(mx + 5, current_y + section_padding - 2, mw - 10, 1, MENU_SEPARATOR);
-    // Removed "Application & Multimedia" header
     current_y += section_padding;
     gui_draw_text_line_fast("Text Editor", mx + 45, current_y + 8, MENU_TEXT_MAIN);
     draw_rect(mx + 10, current_y + 5, 20, 20, 0xFF3498DB);
@@ -192,7 +185,6 @@ void gui_draw_start_menu(gui_window_t* window) {
     current_y += section_padding;
     draw_rect(mx + 5, current_y, mw - 10, item_h + 2 * section_padding, MENU_SECTION_BG);
     draw_rect(mx + 5, current_y + section_padding - 2, mw - 10, 1, MENU_SEPARATOR);
-    // Removed "System" header
     current_y += section_padding;
     gui_draw_text_line_fast("Log out", mx + 45, current_y + 8, MENU_TEXT_MAIN);
     draw_rect(mx + 10, current_y + 5, 20, 20, 0xFFE67E22);
@@ -364,7 +356,7 @@ void gui_redraw_region(int x, int y, int width, int height) {
     }
 }
 void gui_draw_text_fast(const char* str, int x, int y, u32 color) {
-    static u32 cached_glyph_height = 16; // hardcoded to avoid fm dependency
+    static u32 cached_glyph_height = 16;
     const char* line_start = str;
     int current_y = y;
     while (*line_start) {
@@ -524,7 +516,6 @@ void gui_resize_window(gui_window_t* window, int width, int height) {
     int old_height = window->height;
     window->width = width;
     window->height = height;
-    // Mark dirty the area that needs to be redrawn
     int min_x = window->x;
     int min_y = window->y;
     int max_x = window->x + (old_width > width ? old_width : width);
@@ -687,8 +678,6 @@ void gui_draw_window(gui_window_t* window) {
     }
     int radius = 12;
    draw_rounded_rect(window->x, window->y, window->width, window->height, radius, 0xFFADD8E6);
-
-    
     int content_x = window->x;
     int content_y = window->y;
     int content_w = window->width;
@@ -714,7 +703,6 @@ void gui_draw_window(gui_window_t* window) {
         int title_text_x = content_x + (content_w - str_len(window->title) * 8) / 2;
         int title_text_y = content_y + 8;
         gui_draw_text_fast(window->title, title_text_x, title_text_y, 0xFFF0F0F0);
-        // Minimize button
         int minimize_x = content_x + content_w - 80;
         int minimize_y = content_y + 4;
         int button_size = 16;
@@ -724,8 +712,6 @@ void gui_draw_window(gui_window_t* window) {
         }
         draw_circle(minimize_x + button_size/2, minimize_y + button_size/2, button_size/2, minimize_color);
         draw_line(minimize_x + 3, minimize_y + button_size - 5, minimize_x + button_size - 3, minimize_y + button_size - 5, 0xFFFFFFFF);
-
-        // Maximize/Restore button
         int maximize_x = content_x + content_w - 55;
         int maximize_y = content_y + 4;
         u32 maximize_color = 0xFF2ECC71;
@@ -734,17 +720,13 @@ void gui_draw_window(gui_window_t* window) {
         }
         draw_circle(maximize_x + button_size/2, maximize_y + button_size/2, button_size/2, maximize_color);
         if (window->state == WINDOW_STATE_MAXIMIZED) {
-            // Draw restore icon: two overlapping squares
             draw_rect(maximize_x + 3, maximize_y + 3, 6, 6, 0xFFFFFFFF);
             draw_rect(maximize_x + 7, maximize_y + 7, 6, 6, 0xFFFFFFFF);
         } else {
-            // Draw maximize icon: square with arrow pointing up-right
             draw_rect(maximize_x + 4, maximize_y + 4, 8, 8, 0xFFFFFFFF);
             draw_line(maximize_x + 6, maximize_y + 6, maximize_x + 10, maximize_y + 2, 0xFFFFFFFF);
             draw_line(maximize_x + 10, maximize_y + 2, maximize_x + 12, maximize_y + 4, 0xFFFFFFFF);
         }
-
-        // Close button
         int close_x = content_x + content_w - 30;
         int close_y = content_y + 4;
         u32 close_color = 0xFFE74C3C;
@@ -846,7 +828,6 @@ void gui_handle_mouse_click(int x, int y, int button) {
     (void)button;
     gui_state.cursor_x = x;
     gui_state.cursor_y = y;
-    // Reset drag states
     gui_state.drag_state.dragging = 0;
     gui_state.drag_state.dragged_window = NULL;
     gui_state.drag_state.resizing = 0;
@@ -949,7 +930,7 @@ void gui_handle_mouse_click(int x, int y, int button) {
             int title_y_end = title_y_start + WINDOW_TITLE_HEIGHT;
             if (y >= title_y_start && y <= title_y_end) {
                 if (window->state == WINDOW_STATE_MAXIMIZED) {
-                    gui_maximize_window(window); // Restore first
+                    gui_maximize_window(window);
                 }
                 gui_state.drag_state.dragging = 1;
                 gui_state.drag_state.dragged_window = window;
@@ -961,7 +942,6 @@ void gui_handle_mouse_click(int x, int y, int button) {
             } else if (!str_equals(window->title, "") &&
                        x >= window->x + window->width - 20 && y >= window->y + window->height - 20 &&
                        x <= window->x + window->width && y <= window->y + window->height) {
-                // Resize corner
                 gui_state.drag_state.resizing = 1;
                 gui_state.drag_state.resized_window = window;
                 gui_state.drag_state.resize_start_x = x;
@@ -1200,7 +1180,6 @@ static void on_start_button_click(gui_button_t* button) {
     gui_window_t* window = gui_create_window("", 10, start_menu_y, 220, 380);
     if (window) {
         gui_needs_redraw = 1;
-        
     }
 }
 void gui_handle_key(int key) {
@@ -1216,7 +1195,6 @@ void gui_handle_key(int key) {
     } else if (focused && focused->is_text_editor && focused->text_editor_state) {
         gui_text_editor_handle_key(focused->text_editor_state, key);
     } else {
-        // If no focused terminal, find any terminal and focus it
         for (int i = 0; i < gui_state.window_count; i++) {
             if (str_equals(gui_state.windows[i].title, "Terminal")) {
                 gui_focus_window(&gui_state.windows[i]);

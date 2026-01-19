@@ -6,16 +6,13 @@
 #include <kernel/shell/acsh.h>
 extern void *fs_kernel_memory;
 extern u16 ata_primary_io;
-
 #define EXT4_EXTENTS_FL 0x80000
-
 typedef struct {
     u32 ee_block;
     u16 ee_len;
     u16 ee_start_hi;
     u32 ee_start_lo;
 } __attribute__((packed)) ext4_extent;
-
 typedef struct {
     u16 eh_magic;
     u16 eh_entries;
@@ -23,12 +20,10 @@ typedef struct {
     u16 eh_depth;
     u32 eh_generation;
 } __attribute__((packed)) ext4_extent_header;
-
 typedef struct {
     ext4_extent_header eh;
     ext4_extent ee[0];
 } __attribute__((packed)) ext4_extent_list;
-
 typedef struct {
     u32 s_inodes_count;
     u32 s_blocks_count;
@@ -70,7 +65,6 @@ typedef struct {
     u16 s_padding1;
     u32 s_reserved[204];
 } ext4_superblock;
-
 typedef struct {
     u16 i_mode;
     u16 i_uid;
@@ -104,7 +98,6 @@ typedef struct {
     u32 i_crtime_extra;
     u32 i_version_hi;
 } ext4_inode;
-
 typedef struct {
     u32 bg_block_bitmap_lo;
     u32 bg_inode_bitmap_lo;
@@ -130,7 +123,6 @@ typedef struct {
     u16 bg_inode_bitmap_csum_hi;
     u32 bg_reserved[0];
 } ext4_group_desc;
-
 typedef struct {
     void *device;
     ext4_superblock sb;
@@ -142,10 +134,8 @@ typedef struct {
     u64 start_lba;
     u64 journal_start_block;
 } ext4_data;
-
 static int ext4_read_block(ext4_data *data, u64 block, void *buf) {
     if (data->partition_index >= 0) {
-        // Read from partition
         u64 sectors_per_block = data->block_size / 512;
         for (u64 i = 0; i < sectors_per_block; i++) {
             if (partitions_read_sector(data->partition_index, block * sectors_per_block + i, (u8*)buf + i * 512) != 0) return -1;
@@ -159,7 +149,6 @@ static int ext4_read_block(ext4_data *data, u64 block, void *buf) {
         return 0;
     }
 }
-
 static int ext4_write_block(ext4_data *data, u64 block, const void *buf) {
     if (data->partition_index >= 0) {
         u64 sectors_per_block = data->block_size / 512;
@@ -175,7 +164,6 @@ static int ext4_write_block(ext4_data *data, u64 block, const void *buf) {
         return 0;
     }
 }
-
 static int ext4_read_inode(ext4_data *data, u32 inode_num, ext4_inode *inode) {
     u32 group = (inode_num - 1) / data->sb.s_inodes_per_group;
     u32 index = (inode_num - 1) % data->sb.s_inodes_per_group;
@@ -191,7 +179,6 @@ static int ext4_read_inode(ext4_data *data, u32 inode_num, ext4_inode *inode) {
     kernel_memory_free((kernel_memory_t*)fs_kernel_memory, buf);
     return 0;
 }
-
 static int ext4_write_inode(ext4_data *data, u32 inode_num, ext4_inode *inode) {
     u32 group = (inode_num - 1) / data->sb.s_inodes_per_group;
     u32 index = (inode_num - 1) % data->sb.s_inodes_per_group;
@@ -211,18 +198,14 @@ static int ext4_write_inode(ext4_data *data, u32 inode_num, ext4_inode *inode) {
     kernel_memory_free((kernel_memory_t*)fs_kernel_memory, buf);
     return 0;
 }
-
 static u64 ext4_get_block_from_extents(ext4_data *data, ext4_inode *inode, u64 block_index) {
     if (!(inode->i_flags & EXT4_EXTENTS_FL)) {
-        // Direct blocks
         if (block_index < 12) {
             return inode->i_block[block_index];
         } else {
-            // Indirect blocks not implemented
             return 0;
         }
     }
-    // Extents
     ext4_extent_header *eh = (ext4_extent_header*)inode->i_block;
     if (eh->eh_magic != 0xF30A) return 0;
     ext4_extent *ee = (ext4_extent*)(eh + 1);
@@ -233,7 +216,6 @@ static u64 ext4_get_block_from_extents(ext4_data *data, ext4_inode *inode, u64 b
     }
     return 0;
 }
-
 static fs_node *ext4_create_node(ext4_data *data, u32 inode_num, const char *name) {
     ext4_inode inode;
     if (ext4_read_inode(data, inode_num, &inode) < 0) return NULL;
@@ -243,17 +225,14 @@ static fs_node *ext4_create_node(ext4_data *data, u32 inode_num, const char *nam
     node->priv = data;
     return node;
 }
-
 static int ext4_open(fs_node *node, fs_file *file) {
     file->node = node;
     file->pos = 0;
     return 0;
 }
-
 static int ext4_close(fs_file *file) {
     return 0;
 }
-
 static ssize_t ext4_read(fs_file *file, void *buf, size_t cnt) {
     ext4_data *data = (ext4_data*)file->node->priv;
     ext4_inode inode;
@@ -285,7 +264,6 @@ static ssize_t ext4_read(fs_file *file, void *buf, size_t cnt) {
     }
     return read;
 }
-
 static ssize_t ext4_write(fs_file *file, const void *buf, size_t cnt) {
     ext4_data *data = (ext4_data*)file->node->priv;
     ext4_inode inode;
@@ -294,7 +272,7 @@ static ssize_t ext4_write(fs_file *file, const void *buf, size_t cnt) {
     while (cnt > 0) {
         u64 block_index = file->pos / data->block_size;
         u64 block = ext4_get_block_from_extents(data, &inode, block_index);
-        if (block == 0) break; // No block allocated, need to allocate but simplified
+        if (block == 0) break;
         u32 offset = file->pos % data->block_size;
         size_t to_write = data->block_size - offset;
         if (to_write > cnt) to_write = cnt;
@@ -323,7 +301,6 @@ static ssize_t ext4_write(fs_file *file, const void *buf, size_t cnt) {
     }
     return written;
 }
-
 static fs_node *ext4_lookup(fs_node *dir, const char *name) {
     ext4_data *data = (ext4_data*)dir->priv;
     ext4_inode inode;
@@ -347,9 +324,7 @@ static fs_node *ext4_lookup(fs_node *dir, const char *name) {
     kernel_memory_free((kernel_memory_t*)fs_kernel_memory, buf);
     return NULL;
 }
-
 static u32 ext4_alloc_inode(ext4_data *data) {
-    // Simplified: find first free inode starting from 12
     for (u32 ino = 12; ino < data->sb.s_inodes_count; ino++) {
         u32 group = (ino - 1) / data->sb.s_inodes_per_group;
         u32 index = (ino - 1) % data->sb.s_inodes_per_group;
@@ -372,14 +347,12 @@ static u32 ext4_alloc_inode(ext4_data *data) {
     }
     return 0;
 }
-
 static int ext4_create(fs_node *dir, const char *name) {
     ext4_data *data = (ext4_data*)dir->priv;
     u32 new_ino = ext4_alloc_inode(data);
     if (new_ino == 0) return -1;
-    // Initialize inode
     ext4_inode new_inode = {0};
-    new_inode.i_mode = 0x81A4; // Regular file
+    new_inode.i_mode = 0x81A4;
     new_inode.i_uid = 0;
     new_inode.i_gid = 0;
     new_inode.i_size_lo = 0;
@@ -390,10 +363,8 @@ static int ext4_create(fs_node *dir, const char *name) {
     new_inode.i_links_count = 1;
     new_inode.i_blocks_lo = 0;
     new_inode.i_flags = 0;
-    // For simplicity, no extents, use direct block 0
-    new_inode.i_block[0] = 0; // Need to allocate block
+    new_inode.i_block[0] = 0;
     ext4_write_inode(data, new_ino, &new_inode);
-    // Add to directory
     ext4_inode dir_inode;
     if (ext4_read_inode(data, dir->inode, &dir_inode) < 0) return -1;
     u64 block = ext4_get_block_from_extents(data, &dir_inode, 0);
@@ -418,11 +389,9 @@ static int ext4_create(fs_node *dir, const char *name) {
     fs_addchild(dir, node);
     return 0;
 }
-
 static int ext4_mkdir(fs_node *dir, const char *name) {
     return ext4_create(dir, name);
 }
-
 static fs_ops ext4_ops = {
     .open = ext4_open,
     .close = ext4_close,
@@ -432,7 +401,6 @@ static fs_ops ext4_ops = {
     .create = ext4_create,
     .mkdir = ext4_mkdir,
 };
-
 static int ext4_mount(const char *src, const char *tgt, fs_mnt *mnt) {
     print("EXT4: mounting ", white);
     print(src, cyan);
@@ -449,9 +417,8 @@ static int ext4_mount(const char *src, const char *tgt, fs_mnt *mnt) {
     data->partition_index = -1;
     if (src) {
         if (str_starts_with(src, "ata")) {
-            // Parse ataXpY, e.g. ata0p0
             int part = src[5] - '0';
-            data->partition_index = part; // Assuming partitions are indexed by order
+            data->partition_index = part;
             print("EXT4: using partition index ", white);
             printInt(part, cyan);
             print("\n", white);
@@ -459,20 +426,18 @@ static int ext4_mount(const char *src, const char *tgt, fs_mnt *mnt) {
             data->device = (void*)src;
         }
     }
-    // Read superblock at 1024 bytes
     u8 *sb_buf = (u8*)kernel_memory_alloc((kernel_memory_t*)fs_kernel_memory, 1024, 1);
     if (!sb_buf) {
         kernel_memory_free((kernel_memory_t*)fs_kernel_memory, data_ptr);
         return -1;
     }
     if (data->partition_index >= 0) {
-        if (partitions_read_sector(data->partition_index, 2, sb_buf) != 0) { // Sector 2 = 1024 bytes
+        if (partitions_read_sector(data->partition_index, 2, sb_buf) != 0) {
             kernel_memory_free((kernel_memory_t*)fs_kernel_memory, (u64*)sb_buf);
             kernel_memory_free((kernel_memory_t*)fs_kernel_memory, data_ptr);
             return -1;
         }
     } else {
-        // For ramdisk or other, assume offset 1024
         u64 offset = 1024;
         for (u64 i = 0; i < 1024; i++) {
             sb_buf[i] = ((u8*)data->device)[offset + i];
@@ -492,12 +457,9 @@ static int ext4_mount(const char *src, const char *tgt, fs_mnt *mnt) {
     data->block_size = 1024 << data->sb.s_log_block_size;
     data->inode_size = data->sb.s_inode_size;
     u32 gd_blocks = (data->sb.s_blocks_count + data->sb.s_blocks_per_group - 1) / data->sb.s_blocks_per_group;
-    // Basic fsck-like checks
     if (data->sb.s_state != 1) {
-        // FS not clean, but continue
     }
     if (data->sb.s_errors != 1) {
-        // Continue on errors
     }
     data->gd = (ext4_group_desc*)kernel_memory_alloc((kernel_memory_t*)fs_kernel_memory, gd_blocks * sizeof(ext4_group_desc), 1);
     if (!data->gd) {
@@ -508,23 +470,19 @@ static int ext4_mount(const char *src, const char *tgt, fs_mnt *mnt) {
     for (u32 i = 0; i < gd_blocks; i++) {
         ext4_read_block(data, gd_block + i, &data->gd[i]);
     }
-    // Check group descriptors
     for (u32 i = 0; i < gd_blocks; i++) {
         if (data->gd[i].bg_block_bitmap_lo == 0) {
-            // Warning: invalid block bitmap
         }
     }
     mnt->root = ext4_create_node(data, 2, tgt);
     mnt->priv = data_ptr;
     return 0;
 }
-
 static fs_type ext4_type = {
     .name = "ext4",
     .mount = ext4_mount,
     .ops = &ext4_ops,
 };
-
 void ext4_register(void) {
     fs_register(&ext4_type);
 }

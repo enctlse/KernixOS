@@ -143,13 +143,10 @@ if (caps_lock && !shift_pressed && key >= 'a' && key <= 'z') {
             else if (sc == 0x4D) console_handle_key(0x83);
         }
     }
-    outb(0x20, 0x20); // EOI for master PIC
+    outb(0x20, 0x20);
 }
 void keyboard_init(void) {
-    // No need to register, handled in exception_handler.c
-    // But need to unmask IRQ 1
-    // Assuming PIC is initialized elsewhere
-    outb(0x21, inb(0x21) & ~(1 << 1)); // Unmask IRQ 1
+    outb(0x21, inb(0x21) & ~(1 << 1));
 }
 char keyboard_get_key(void) {
     return 0; 

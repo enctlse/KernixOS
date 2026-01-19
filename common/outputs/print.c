@@ -110,12 +110,10 @@ void putchar(char c, u32 color)
 static char gui_buffer[1024] = {0};
 static int buffer_pos = 0;
 static u32 gui_buffer_color = 0xFFFFFFFF;
-
 void string(const char *str, u32 color)
 {
     if (!str) return;
     if (gui_mode) {
-        // In GUI mode, buffer output until newline
         while (*str) {
             if (*str == '\n' || buffer_pos >= sizeof(gui_buffer) - 1) {
                 gui_buffer[buffer_pos] = '\0';
@@ -128,7 +126,7 @@ void string(const char *str, u32 color)
                 }
             } else {
                 gui_buffer[buffer_pos++] = *str;
-                gui_buffer_color = color;  // Update color for current buffer
+                gui_buffer_color = color;
             }
             str++;
         }
@@ -181,14 +179,12 @@ void IntToString(int value, char *buffer)
     }
     buffer[buffer_index] = '\0';
 }
-
 void print_int(int value, u32 color)
 {
     char buffer[12];
     IntToString(value, buffer);
     string(buffer, color);
 }
-
 void print_uint(u32 num, u32 color)
 {
     if (num == 0) {
@@ -205,7 +201,6 @@ void print_uint(u32 num, u32 color)
         putchar(buffer[--buffer_index], color);
     }
 }
-
 void print_hex(u32 num, u32 color)
 {
     const char hex_digits[] = "0123456789ABCDEF";
@@ -218,7 +213,6 @@ void print_hex(u32 num, u32 color)
     buffer[10] = '\0';
     string(buffer, color);
 }
-
 void print_hex64(u64 num, u32 color)
 {
     const char hex_digits[] = "0123456789ABCDEF";

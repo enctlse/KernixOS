@@ -57,7 +57,6 @@ FHDR(cmd_ls) {
         return;
     }
     fs_node *child = dir->children;
-
     while (child) {
         u32 color = TERM_COLOR_DEFAULT;
         const char *type_str = "";
@@ -182,21 +181,18 @@ FHDR(cmd_mount) {
     }
     char src[64], tgt[64], type[64];
     int i = 0;
-    // Parse src
     while (*args && *args != ' ') {
         src[i++] = *args++;
     }
     src[i] = '\0';
     while (*args == ' ') args++;
     i = 0;
-    // Parse tgt
     while (*args && *args != ' ') {
         tgt[i++] = *args++;
     }
     tgt[i] = '\0';
     while (*args == ' ') args++;
     i = 0;
-    // Parse type
     while (*args && *args != ' ') {
         type[i++] = *args++;
     }

@@ -1,7 +1,6 @@
 #include "panic.h"
 #include <kernel/display/visual.h>
 #include <config/boot.h>
-
 static void display_panic_header() {
     setcontext(THEME_PANIC);
     clear(black);
@@ -10,7 +9,6 @@ static void display_panic_header() {
     print("*** SYSTEM FAILURE DETECTED ***", theme_red);
     print("\n", theme_white);
 }
-
 static void display_cpu_state(cpu_state_t *state) {
     if (!state) return;
     char buffer[256];
@@ -20,18 +18,15 @@ static void display_cpu_state(cpu_state_t *state) {
     str_append_uint(buffer, (u32)state->err_code);
     print(buffer, theme_white);
     print("\n", theme_white);
-
     str_copy(buffer, "Instruction Pointer: 0x");
     str_append_hex(buffer, state->rip);
     print(buffer, theme_white);
     print("\n", theme_white);
-
     str_copy(buffer, "Stack Pointer: 0x");
     str_append_hex(buffer, state->rsp);
     print(buffer, theme_white);
     print("\n", theme_white);
 }
-
 static void __attribute__((noreturn)) halt_system() {
     print("\nSystem halted. Manual restart required.\n", theme_white);
     while(1) {
@@ -39,7 +34,6 @@ static void __attribute__((noreturn)) halt_system() {
     }
     __builtin_unreachable();
 }
-
 __attribute__((noreturn)) void initiate_panic(const char *message) {
     display_panic_header();
     if (message) {
@@ -51,7 +45,6 @@ __attribute__((noreturn)) void initiate_panic(const char *message) {
     halt_system();
     __builtin_unreachable();
 }
-
 __attribute__((noreturn)) void initiate_fault_panic(cpu_state_t *state, const char *message) {
     display_panic_header();
     if (message) {

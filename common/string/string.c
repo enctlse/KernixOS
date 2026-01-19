@@ -1,26 +1,22 @@
 #include "string.h"
 #include "outputs/print.h"
-
 void str_copy(char *destination, const char *source) {
     char *dest_ptr = destination;
     const char *src_ptr = source;
     while ((*dest_ptr++ = *src_ptr++));
 }
-
 void str_append(char *destination, const char *source) {
     char *dest_ptr = destination;
     while (*dest_ptr) dest_ptr++;
     const char *src_ptr = source;
     while ((*dest_ptr++ = *src_ptr++));
 }
-
 static void add_digits(char *buffer, u32 number, int *position) {
     if (number >= 10) {
         add_digits(buffer, number / 10, position);
     }
     buffer[(*position)++] = '0' + (number % 10);
 }
-
 void str_append_uint(char *destination, u32 number) {
     char temp_buffer[20];
     int pos = 0;
@@ -32,7 +28,6 @@ void str_append_uint(char *destination, u32 number) {
     temp_buffer[pos] = '\0';
     str_append(destination, temp_buffer);
 }
-
 void str_append_hex(char *destination, u64 number) {
     char temp_buffer[17];
     int pos = 0;
@@ -49,13 +44,11 @@ void str_append_hex(char *destination, u64 number) {
     temp_buffer[pos] = '\0';
     str_append(destination, temp_buffer);
 }
-
 int str_len(const char *input_string) {
     const char *ptr = input_string;
     while (*ptr) ptr++;
     return ptr - input_string;
 }
-
 int str_starts_with(const char *input_string, const char *prefix_string) {
     if (!input_string || !prefix_string) return 0;
     while (*prefix_string && *input_string == *prefix_string) {
@@ -64,7 +57,6 @@ int str_starts_with(const char *input_string, const char *prefix_string) {
     }
     return !*prefix_string;
 }
-
 int str_equals(const char *first_string, const char *second_string) {
     if (!first_string || !second_string) return 0;
     while (*first_string && *second_string && !(*first_string ^ *second_string)) {
@@ -73,7 +65,6 @@ int str_equals(const char *first_string, const char *second_string) {
     }
     return !(*first_string ^ *second_string);
 }
-
 void str_to_upper(char *input_string) {
     if (!input_string) return;
     char *ptr = input_string;
@@ -82,7 +73,6 @@ void str_to_upper(char *input_string) {
         ptr++;
     }
 }
-
 void str_to_lower(char *input_string) {
     if (!input_string) return;
     char *ptr = input_string;
@@ -91,7 +81,6 @@ void str_to_lower(char *input_string) {
         ptr++;
     }
 }
-
 void str_trim(char *input_string) {
     if (!input_string) return;
     char *start_pos = input_string;
@@ -107,7 +96,6 @@ void str_trim(char *input_string) {
     while (start_pos < end_pos) *dest_ptr++ = *start_pos++;
     *dest_ptr = '\0';
 }
-
 void str_reverse(char *input_string) {
     if (!input_string) return;
     char *end_ptr = input_string;
@@ -121,7 +109,6 @@ void str_reverse(char *input_string) {
         end_ptr--;
     }
 }
-
 int str_to_int(const char *input_string) {
     if (!input_string) return 0;
     int result_value = 0;
@@ -139,7 +126,6 @@ int str_to_int(const char *input_string) {
     }
     return result_value * sign_value;
 }
-
 void str_from_int(char *buffer, int value) {
     if (!buffer) return;
     char *buf_ptr = buffer;
@@ -156,7 +142,6 @@ void str_from_int(char *buffer, int value) {
     *buf_ptr = '\0';
     str_reverse(buffer);
 }
-
 int str_contains(const char *input_string, const char *substring) {
     if (!input_string || !substring) return 0;
     const char *str_ptr = input_string;
@@ -172,7 +157,6 @@ int str_contains(const char *input_string, const char *substring) {
     }
     return 0;
 }
-
 void print_str(const char *input_string, u32 color_value) {
     string(input_string, color_value);
     putchar('\n', color_value);

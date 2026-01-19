@@ -1,7 +1,6 @@
 #include <kernel/shell/acsh.h>
 #include <kernel/module/lkm.h>
 #include <string/string.h>
-
 FHDR(cmd_rmmod)
 {
     if (*s == '\0') {

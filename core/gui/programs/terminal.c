@@ -101,7 +101,6 @@ void gui_terminal_print(gui_terminal_state_t* state, const char *text, u32 color
     while (*text) {
         if (*text == '\n') {
             current_line[current_pos] = '\0';
-            // Split long lines
             int pos = 0;
             while (pos < current_pos) {
                 int len = current_pos - pos;
@@ -122,7 +121,6 @@ void gui_terminal_print(gui_terminal_state_t* state, const char *text, u32 color
     }
     if (current_pos > 0) {
         current_line[current_pos] = '\0';
-        // Split long lines
         int pos = 0;
         while (pos < current_pos) {
             int len = current_pos - pos;
@@ -248,13 +246,12 @@ void terminal_print(const char *text, u32 color) {
     if (current_terminal_state) {
         gui_terminal_print(current_terminal_state, text, color);
     } else {
-        // Direct console output without buffering
         extern void string(const char *str, u32 color);
         int saved_gui_mode = 0;
         extern int gui_mode;
         if (gui_mode) {
             saved_gui_mode = 1;
-            gui_mode = 0;  // Temporarily disable GUI mode to avoid buffering
+            gui_mode = 0;
         }
         string(text, color);
         if (saved_gui_mode) {
@@ -273,7 +270,6 @@ void cmd_gui(const char* args) {
     gui_init();
 }
 void gui_terminal_handle_key(gui_terminal_state_t* state, char key) {
-    // Автоматически скроллить к prompt при наборе
     state->scroll_offset = 0;
     char prompt[64];
     gui_generate_prompt(prompt, sizeof(prompt));
@@ -284,12 +280,10 @@ void gui_terminal_handle_key(gui_terminal_state_t* state, char key) {
             state->output_buffer[state->output_line_count - 1][state->input_pos] = '\0';
         }
     } else if (key == '\n') {
-        // выполнить команду
         char* command = state->output_buffer[state->output_line_count - 1] + prompt_len;
         if (str_len(command) > 0) {
             gui_execute(state, command);
         }
-        // добавить новый prompt
         char new_prompt[64];
         gui_generate_prompt(new_prompt, sizeof(new_prompt));
         gui_terminal_add_line(state, new_prompt, TERM_COLOR_PROMPT);
@@ -408,7 +402,6 @@ void gui_terminal_draw(gui_terminal_state_t* state, gui_window_t* window, int te
         int display_chars = state->scrollbar_visible ?
             state->window_width_chars - 2 : state->window_width_chars;
         if (i == state->output_line_count - 1) {
-            // Для prompt линии, разделить цвет и разбить input
             char prompt[64];
             gui_generate_prompt(prompt, sizeof(prompt));
             int prompt_len = str_len(prompt);
@@ -420,7 +413,6 @@ void gui_terminal_draw(gui_terminal_state_t* state, gui_window_t* window, int te
                 int available_chars = display_chars;
                 int start_x = text_x;
                 if (y_offset == 0) {
-                    // Первая линия: prompt + input
                     if (prompt_len > 0) {
                         int prompt_display = (prompt_len > display_chars) ? display_chars : prompt_len;
                         char prompt_part[prompt_display + 1];
@@ -433,7 +425,6 @@ void gui_terminal_draw(gui_terminal_state_t* state, gui_window_t* window, int te
                         start_x += prompt_display * CHAR_WIDTH;
                     }
                 }
-                // Рисовать input часть
                 int len = input_len - input_pos;
                 if (len > available_chars) len = available_chars;
                 if (len > 0) {
@@ -449,9 +440,7 @@ void gui_terminal_draw(gui_terminal_state_t* state, gui_window_t* window, int te
                 line_idx++;
                 y_offset++;
             }
-          
         } else {
-            // Для других линий
            int pos = 0;
 while (pos < line_len && line_idx < max_output_lines) {
     int len = line_len - pos;
@@ -467,7 +456,6 @@ while (pos < line_len && line_idx < max_output_lines) {
     pos += len;
     if (cur_y + char_h > effective_window_bottom) break;
 }
-
     }
 }
 }

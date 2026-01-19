@@ -1,9 +1,7 @@
 #ifndef INTERRUPT_SERVICE_H
 #define INTERRUPT_SERVICE_H
-
 #include <outputs/types.h>
 #include <kernel/cpu/idt.h>
-
 extern void exception_31(void);
 extern void exception_30(void);
 extern void exception_29(void);
@@ -36,11 +34,8 @@ extern void exception_3(void);
 extern void exception_2(void);
 extern void exception_1(void);
 extern void exception_0(void);
-
 typedef void (*isr_handler_t)(cpu_state_t* state);
-
 void isr_unregister_handler(u8 num);
 void isr_register_handler(u8 num, isr_handler_t handler);
 void isr_install(void);
-
 #endif

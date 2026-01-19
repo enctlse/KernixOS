@@ -1,16 +1,11 @@
 #ifndef NETWORK_H
 #define NETWORK_H
-
 #include <stdint.h>
-
-// Ethernet Header
 typedef struct {
     uint8_t dest_mac[6];
     uint8_t src_mac[6];
     uint16_t ethertype;
 } __attribute__((packed)) ethernet_header_t;
-
-// IPv4 Header
 typedef struct {
     uint8_t version_ihl;
     uint8_t tos;
@@ -23,8 +18,6 @@ typedef struct {
     uint32_t src_ip;
     uint32_t dest_ip;
 } __attribute__((packed)) ipv4_header_t;
-
-// ICMP Header
 typedef struct {
     uint8_t type;
     uint8_t code;
@@ -32,16 +25,12 @@ typedef struct {
     uint16_t id;
     uint16_t seq;
 } __attribute__((packed)) icmp_header_t;
-
-// UDP Header
 typedef struct {
     uint16_t src_port;
     uint16_t dest_port;
     uint16_t length;
     uint16_t checksum;
 } __attribute__((packed)) udp_header_t;
-
-// TCP Header
 typedef struct {
     uint16_t src_port;
     uint16_t dest_port;
@@ -53,8 +42,6 @@ typedef struct {
     uint16_t checksum;
     uint16_t urgent_ptr;
 } __attribute__((packed)) tcp_header_t;
-
-// DHCP Message
 typedef struct {
     uint8_t op;
     uint8_t htype;
@@ -71,10 +58,7 @@ typedef struct {
     uint8_t sname[64];
     uint8_t file[128];
     uint32_t magic;
-    // Options follow
 } __attribute__((packed)) dhcp_header_t;
-
-// ARP Header
 typedef struct {
     uint16_t htype;
     uint16_t ptype;
@@ -86,8 +70,6 @@ typedef struct {
     uint8_t tha[6];
     uint32_t tpa;
 } __attribute__((packed)) arp_header_t;
-
-// DNS Header
 typedef struct {
     uint16_t id;
     uint16_t flags;
@@ -96,15 +78,11 @@ typedef struct {
     uint16_t nscount;
     uint16_t arcount;
 } __attribute__((packed)) dns_header_t;
-
-// ARP Entry
 typedef struct {
     uint32_t ip;
     uint8_t mac[6];
     int valid;
 } arp_entry_t;
-
-// Network Configuration
 typedef struct {
     uint8_t mac[6];
     uint32_t ip;
@@ -113,9 +91,7 @@ typedef struct {
     uint32_t dns;
     arp_entry_t arp_table[16];
 } network_config_t;
-
 extern network_config_t net_config;
-
 void network_init();
 void network_send_packet(void* data, int len, uint8_t* dest_mac, uint16_t ethertype);
 int network_receive_packet(void* buffer, int max_len);
@@ -123,5 +99,4 @@ uint16_t network_checksum(void* data, int len);
 void network_handle_packet(void* packet, int len);
 void arp_request(uint32_t target_ip);
 uint8_t* arp_lookup(uint32_t ip);
-
 #endif

@@ -1,14 +1,10 @@
 #include "isr.h"
 #include "../cpu/cpu_faults.h"
 #include <kernel/cpu/idt.h>
-
 #define EXCEPTION_VECTORS_COUNT 32
-
 static isr_handler_t vector_callbacks[EXCEPTION_VECTORS_COUNT];
-
 void exception_processor(cpu_state_t* ctx) {
     uint8_t vector_id = ctx->int_no;
-    
     if (vector_id < EXCEPTION_VECTORS_COUNT && 
         vector_callbacks[vector_id] != NULL) {
         vector_callbacks[vector_id](ctx);
@@ -16,12 +12,10 @@ void exception_processor(cpu_state_t* ctx) {
         handle_cpu_interrupt(ctx);
     }
 }
-
 void isr_install(void) {
     for (uint8_t i = 0; i < EXCEPTION_VECTORS_COUNT; i++) {
         vector_callbacks[i] = NULL;
     }
-    
     idt_set_gate(0, (uint64_t)exception_0, 0);
     idt_set_gate(1, (uint64_t)exception_1, 0);
     idt_set_gate(2, (uint64_t)exception_2, 0);
@@ -55,13 +49,11 @@ void isr_install(void) {
     idt_set_gate(30, (uint64_t)exception_30, 0);
     idt_set_gate(31, (uint64_t)exception_31, 0);
 }
-
 void isr_register_handler(uint8_t vector, isr_handler_t callback) {
     if (vector < EXCEPTION_VECTORS_COUNT) {
         vector_callbacks[vector] = callback;
     }
 }
-
 void isr_unregister_handler(uint8_t vector) {
     if (vector < EXCEPTION_VECTORS_COUNT) {
         vector_callbacks[vector] = NULL;
