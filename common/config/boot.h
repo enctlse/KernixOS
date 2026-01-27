@@ -62,14 +62,9 @@ extern int init_boot_log;
 #define PANICSCREEN_COLOR_R 0xFF8B0000
 #define PANIC_COLOR_THEME STD
 #define theme_white 0xFFFFFF
-#define gray_70 0xB8B8B8
 #define green 0xFF00FF00
 #define red 0xFF8B0000
-#define cyan 0xFF00FFFF
-#define yellow 0xFFFFFF00
 #define blue 0xFF0000FF
-#define purple 0xFF800080
-#define black 0x000000
 #define theme_bg 0x000000
 #define theme_red 0xFF8B0000
 #define theme_green 0xFF00FF00
@@ -78,10 +73,7 @@ extern int init_boot_log;
 #define theme_cyan 0xFF00FFFF
 #define theme_purple 0xFF800080
 #define theme_black 0x000000
-#define st_white 0xFFFFFF
 #define st_red 0xFF8B0000
-#define st_cyan 0xFF00FFFF
-#define st_black 0x000000
 #define theme_init() ((void)0)
 #define setcontext(x) ((void)0)
 #define sbootup_theme(x) ((void)0)

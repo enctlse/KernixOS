@@ -1,3 +1,4 @@
+SHELL = /bin/bash
 include common.mk
 
 SRCS = $(shell find $(SRC_DIR) common -name "*.c" -or -name "*.cpp" -or -name "*.asm")
@@ -52,8 +53,7 @@ run: $(ISO)
 		-drive if=pflash,format=raw,readonly=on,file=uefi/OVMF_CODE.fd \
 		-drive if=pflash,format=raw,file=uefi/OVMF_VARS.fd \
 		-cdrom $< \
-		-usb \
-		-device usb-tablet \
+	
 		-display sdl \
 		-serial stdio 2>&1 \
 		-no-reboot \

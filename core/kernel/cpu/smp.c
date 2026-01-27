@@ -35,7 +35,7 @@ void smp_init(void) {
     apic_init();
     SYSTEM_PRINT("[SMP] apic_init() completed\n", gray_70);
     if (mp_request.response && mp_request.response->cpu_count > 0) {
-        SYSTEM_PRINT("[SMP] Using Limine MP request for CPU detection\n", gray_70);
+        SYSTEM_PRINT("[SMP] Using Limine SMP request for CPU detection\n", gray_70);
         for (u64 i = 0; i < mp_request.response->cpu_count; i++) {
             struct limine_mp_info* cpu = mp_request.response->cpus[i];
             SYSTEM_PRINT("[SMP] CPU ", gray_70);
@@ -63,9 +63,7 @@ void smp_start_aps(void) {
     __asm__ volatile("cli");
     for (u64 i = 1; i < mp_request.response->cpu_count; i++) {
         struct limine_mp_info* cpu = mp_request.response->cpus[i];
-        limine_goto_address original = cpu->goto_address;
         cpu->goto_address = ap_entry;
-        original(cpu);
     }
     __asm__ volatile("sti");
 }

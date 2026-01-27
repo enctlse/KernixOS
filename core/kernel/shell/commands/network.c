@@ -7,7 +7,7 @@
 extern u32 parse_ip(const char *str);
 network_config_t net_config = {0};
 void network_init() {
-    int pci_count = bus_pci_device_total();
+    int pci_count = bus_device_count();
     serial_puts("PCI count: ");
     char buf[16];
     str_copy(buf, "");
